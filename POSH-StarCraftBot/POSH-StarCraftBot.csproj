@@ -1,0 +1,91 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{A4730B6A-6717-48D8-AEB2-810AE3A0315D}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>POSH_StarCraftBot</RootNamespace>
+    <AssemblyName>POSH-SCBot</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="log4net">
+      <HintPath>library\log4net.dll</HintPath>
+    </Reference>
+    <Reference Include="POSH-sharp-core, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\POSH-Launcher\library\POSH-sharp-core.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\..\..\Common\Bot\StarcraftBotLib\IStarcraftBot.cs">
+      <Link>IStarcraftBot.cs</Link>
+    </Compile>
+    <Compile Include="behaviours\AStarCraftBehaviour.cs" />
+    <Compile Include="behaviours\BuildingControl.cs" />
+    <Compile Include="behaviours\CombatControl.cs" />
+    <Compile Include="behaviours\StrategyControl.cs" />
+    <Compile Include="behaviours\UnitControl.cs" />
+    <Compile Include="BODStarCraftBot.cs" />
+    <Compile Include="Core.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\bwapi-clr\bwapi-clr.csproj">
+      <Project>{6657C37C-4F1B-4972-AAB0-B395EE5F53DF}</Project>
+      <Name>bwapi-clr</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <None Include="library\init\POSH-StarCraftBot_init" />
+    <None Include="library\plans\PSCB-3HatchHydra-v2.lap" />
+    <None Include="library\plans\PSCB-3HatchHydra.lap" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>copy /y  "$(ProjectDir)$(OutDir)POSH-SCBot.dll" "$(SolutionDir)..\..\Release\Libs\client"
+copy /y  "$(ProjectDir)$(OutDir)POSH-SCBot.dll" "$(ProjectDir)..\POSH-Launcher\library"
+copy /y  "$(ProjectDir)\library\plans\*.lap" "$(ProjectDir)..\POSH-Launcher\library\plans"</PostBuildEvent>
+  </PropertyGroup>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

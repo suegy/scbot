@@ -1,0 +1,7 @@
+﻿# Starcraft Bot init file
+
+[PSCB-3HatchHydra]
+Core.botname = POSHBot
+#Core.team = 0
+#Core.ip = 127.0.0.1
+#Core.port = 3000
