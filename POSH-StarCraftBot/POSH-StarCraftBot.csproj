@@ -51,7 +51,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\..\..\Common\Bot\StarcraftBotLib\IStarcraftBot.cs">
+    <Compile Include="..\..\Common\Bot\StarcraftBotLib\IStarcraftBot.cs">
       <Link>IStarcraftBot.cs</Link>
     </Compile>
     <Compile Include="behaviours\AStarCraftBehaviour.cs" />
@@ -64,7 +64,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\bwapi-clr\bwapi-clr.csproj">
+    <ProjectReference Include="..\..\bwapi-clr-client\bwapi-clr\bwapi-clr.csproj">
       <Project>{6657C37C-4F1B-4972-AAB0-B395EE5F53DF}</Project>
       <Name>bwapi-clr</Name>
     </ProjectReference>
