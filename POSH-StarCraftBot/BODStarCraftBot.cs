@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using SWIG.BWAPI;
 using BWAPI;
-using POSH_sharp.sys.strict;
+using POSH.sys.strict;
 using SWIG.BWTA;
 
 namespace POSH_StarCraftBot

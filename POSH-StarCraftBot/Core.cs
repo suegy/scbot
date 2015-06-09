@@ -4,11 +4,11 @@ using System.Linq;
 using System.Text;
 using SWIG.BWAPIC;
 using SWIG.BWAPI;
-using POSH_sharp.sys;
+using POSH.sys;
 using POSH_StarCraftBot.behaviours;
-using POSH_sharp.sys.strict;
+using POSH.sys.strict;
 using SWIG.BWTA;
-using POSH_sharp.sys.annotations;
+using POSH.sys.annotations;
 
 namespace POSH_StarCraftBot
 {
@@ -25,7 +25,7 @@ namespace POSH_StarCraftBot
         }
 
         public Core(AgentBase agent, Dictionary<string, object> attributes)
-            : base(agent, new string[]{}, new string[]{"Fail", "Success"})
+            : base(agent, new string[]{}, new string[]{})
         {
             // default connection values, use attributes to override
             botName = "POSHbot";

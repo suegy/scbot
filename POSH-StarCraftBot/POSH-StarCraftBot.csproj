@@ -28,7 +28,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;LOG_ON</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -39,9 +39,8 @@
     <Reference Include="log4net">
       <HintPath>library\log4net.dll</HintPath>
     </Reference>
-    <Reference Include="POSH-sharp-core, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\POSH-Launcher\library\POSH-sharp-core.dll</HintPath>
+    <Reference Include="POSH-core">
+      <HintPath>library\POSH-core.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -77,7 +76,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy /y  "$(ProjectDir)$(OutDir)POSH-SCBot.dll" "$(SolutionDir)..\..\Release\Libs\client"
+    <PostBuildEvent>copy /y  "$(ProjectDir)$(OutDir)POSH-SCBot.dll" "$(SolutionDir)..\..\$(ConfigurationName)\Libs\client"
 copy /y  "$(ProjectDir)$(OutDir)POSH-SCBot.dll" "$(ProjectDir)..\POSH-Launcher\library"
 copy /y  "$(ProjectDir)\library\plans\*.lap" "$(ProjectDir)..\POSH-Launcher\library\plans"</PostBuildEvent>
   </PropertyGroup>

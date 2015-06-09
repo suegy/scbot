@@ -35,7 +35,7 @@
 	)
 )
 
-(SDC 3HatchHydra (goal ())
+(SRDC 3HatchHydra (goal ())
 	(drives
 		(
 

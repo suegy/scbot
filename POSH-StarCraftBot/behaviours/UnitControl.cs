@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using POSH_sharp.sys;
-using POSH_sharp.sys.annotations;
+using POSH.sys;
+using POSH.sys.annotations;
 using SWIG.BWAPI;
 
 namespace POSH_StarCraftBot.behaviours

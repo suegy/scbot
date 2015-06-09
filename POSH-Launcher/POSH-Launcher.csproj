@@ -28,7 +28,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;LOG_ON</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -36,9 +36,8 @@
     <Reference Include="log4net">
       <HintPath>..\POSH-StarCraftBot\library\log4net.dll</HintPath>
     </Reference>
-    <Reference Include="POSH-sharp-core, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>library\POSH-sharp-core.dll</HintPath>
+    <Reference Include="POSH-core">
+      <HintPath>library\POSH-core.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -68,7 +67,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\bwapi-clr\bwapi-clr.csproj">
+    <ProjectReference Include="..\..\bwapi-clr-client\bwapi-clr\bwapi-clr.csproj">
       <Project>{6657C37C-4F1B-4972-AAB0-B395EE5F53DF}</Project>
       <Name>bwapi-clr</Name>
     </ProjectReference>

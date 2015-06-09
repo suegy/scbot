@@ -2,12 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using POSH_sharp.sys.exceptions;
 using System.IO;
 using log4net.Core;
 using System.Threading;
-using POSH_sharp.sys;
 using System.Reflection;
+using POSH.sys;
+using POSH.sys.exceptions;
+
+#if LOG_ON
+    using log4net;
+#endif
 
 namespace POSH_Launcher
 {
@@ -279,91 +283,6 @@ namespace POSH_Launcher
             return new Tuple<World,bool>(null,false);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="verbose"></param>
-        /// <param name="assembly"></param>
-        /// <param name="agentLibrary"></param>
-        /// <returns>returns a dictionary containing agentnames and a dictionary containing attributes for the agent</returns>
-        private List<Tuple<string, object>> InitAgents(bool verbose, string assembly, string agentLibrary)
-        {
-            List<Tuple<string, object>> agentsInit = null;
-            string agentsInitFile = string.Format("{0}_{1}", agentLibrary, "init.txt");
-            
-            // check if the agent init file exists
-            if (!control.checkAgentInitFile(agentsInitFile)) 
-                throw new UsageException(string.Format("cannot find specified agent init file in directory '{0}' which should contain the agent init file '{2}'", 
-                        control.config["InitPath"], agentsInitFile));
-                
-            if (verbose)
-                    Console.Out.WriteLine(string.Format("reading initialisation file '{0}'", agentsInitFile));
-            try
-            {
-                agentsInit = AgentInitParser.initAgentFile(control.getAgentInitFileStream(agentsInitFile));
-            }
-            catch (Exception e)
-            {
-                try
-                {
-                    agentsInit = AgentInitParser.initAgentFile(control.getAgentInitFileStream(assembly,agentsInitFile));
-                }
-                catch (Exception )
-                {
-                    throw new UsageException("reading agent initialisation file Failed",e);
-                }
-            }
-
-            return agentsInit;
-        }
-
-        private AgentBase[] createAgents(bool verbose, string assembly, List<Tuple<string, object>> agentsInit, Tuple<World, bool> setting)
-        {
-            // create the agents
-            AgentBase[] agents = null;
-            if (verbose)
-                Console.Out.WriteLine("- creating agent(s)");
-            try
-            {
-                agents = AgentFactory.createAgents(assembly, "", agentsInit, setting.First);
-            }
-            catch (Exception e)
-            {
-                Console.Out.WriteLine("creating agent(s) Failed, see following error");
-                Console.Out.WriteLine("----");
-                if (verbose)
-                    Console.Out.WriteLine(e);
-            }
-            return agents;
-        }
-
-        private bool Run(bool verbose, AgentBase[] agents, bool loopsRunning)
-        {
-            // check all 0.1 seconds if the loops are still running, and exit otherwise
-            while (loopsRunning)
-            {
-                Thread.Sleep(100);
-                loopsRunning = false;
-                foreach (AgentBase agent in agents)
-                    if (agent.loopStatus().First)
-                        loopsRunning = true;
-            }
-            if (verbose)
-                Console.Out.WriteLine("- all agents stopped");
-            return loopsRunning;
-        }
-
-        private bool StartAgents(bool verbose, AgentBase[] agents)
-        {
-            if (verbose)
-                Console.Out.WriteLine("- starting the agent(s)");
-            if (agents is AgentBase[])
-                foreach (AgentBase agent in agents)
-                    agent.startLoop();
-
-            return true;
-        }
-
         public static void Main(string [] args)
         {
             // OLDCOMMENT: There must be a beter way to do this... see jyposh.py and utils compile_mason_java() 
@@ -398,21 +317,26 @@ namespace POSH_Launcher
             worldArgs = arguments.Forth;
             agentSuffix = arguments.Fifth;
             agentLibrary = arguments.Sixth;
-            
+
             // activate logging. we do this before initialising the world, as it might
             // use this logging facility
+#if LOG_ON
+            string configFile = String.Format("log4net.xml", Path.DirectorySeparatorChar);
 
-            if (verbose)
-                StreamLogger.setupConsoleLogging(Level.Debug);
-            else
-                StreamLogger.setupConsoleLogging(Level.Info);
+            /**/
+            System.IO.FileInfo fileInfo = new System.IO.FileInfo(configFile);
+            /**/
+            log4net.Config.XmlConfigurator.ConfigureAndWatch(fileInfo);
+            /**/
+            log4net.LogManager.GetLogger(typeof(LogBase)).InfoFormat("tesat", configFile);
+#endif
             // read agent initialisation. this needs to be done before initialising
             // the world, as the agent initialisation needs to be give to the world
             // initialisation script
 
             if (verbose)
                 Console.Out.WriteLine("- collect agent initialisation options");
-            agentsInit = application.InitAgents(verbose, assembly, agentLibrary);
+            agentsInit = application.control.InitAgents(verbose, assembly, agentLibrary);
 
             if (verbose)
                 Console.Out.WriteLine(string.Format("will create {0} agent(s)", agentsInit.Count));
@@ -431,8 +355,6 @@ namespace POSH_Launcher
                     Console.Out.WriteLine("-------");
                     if (verbose)
                         Console.Out.WriteLine(e);
-                    
-                
             }
 
             if (setting != null && setting.Second)
@@ -443,20 +365,14 @@ namespace POSH_Launcher
                 return;
             }
 
-            agents = application.createAgents(verbose, assembly, agentsInit, setting);
+            agents = application.control.CreateAgents(verbose, assembly, agentsInit, setting);
             if (agents == null)
                 return;
             // start the agents
-            bool loopsRunning = application.StartAgents(verbose, agents);
+            bool loopsRunning = application.control.StartAgents(verbose, agents);
 
-            loopsRunning = application.Run(verbose, agents, loopsRunning);
+            loopsRunning = application.control.Running(verbose, agents, loopsRunning);
 
         }
-
-
-
-        
-
-
     }
 }
