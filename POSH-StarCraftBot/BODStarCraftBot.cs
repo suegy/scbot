@@ -32,7 +32,7 @@ namespace POSH_StarCraftBot
         void IStarcraftBot.onStart()
         {
             System.Console.WriteLine("Starting Match!");
-            bwapi.Broodwar.sendText("Hello world!");
+            bwapi.Broodwar.sendText("Hello world! This is POSH!");
 
             ActivePlayers = new Dictionary<string, Player>();
             UnitDiscovered = new Dictionary<long, Unit>();
@@ -58,6 +58,11 @@ namespace POSH_StarCraftBot
             return bwapi.Broodwar.self();
         }
 
+        public bool GameRunning()
+        {
+            return bwapi.Broodwar.isInGame();
+        }
+
         public BaseLocation StartLocation()
         {
             return bwta.getStartLocation(Self());
@@ -81,12 +86,16 @@ namespace POSH_StarCraftBot
 
         public int AvailableSupply()
         {
-            return ( bwapi.Broodwar.self().supplyTotal() - bwapi.Broodwar.self().supplyUsed() );
+            return ( bwapi.Broodwar.self().supplyTotal() - bwapi.Broodwar.self().supplyUsed() )/2;
         }
 
+        /// <summary>
+        /// Supply is devided by 2 because BWAPI doubled the amount to have a mininimum of 1 supply for Zerglings which is normally 0.5
+        /// </summary>
+        /// <returns></returns>
         public int TotalSupply()
         {
-            return bwapi.Broodwar.self().supplyTotal();
+            return bwapi.Broodwar.self().supplyTotal()/2;
         }
 
         //
@@ -198,12 +207,12 @@ namespace POSH_StarCraftBot
 
         public IEnumerable<Unit> GetGeysers()
         {
-            return bwapi.Broodwar.self().getUnits().Where(unit => unit.getType().getID() == bwapi.UnitTypes_Resource_Vespene_Geyser.getID());
+            return bwapi.Broodwar.getGeysers();
         }
 
         public IEnumerable<Unit> GetMineralPatches()
         {
-            return bwapi.Broodwar.self().getUnits().Where(unit => mineralPatchIDs.Contains(unit.getType().getID())).Where(patch => patch.getResources() > 0);
+            return bwapi.Broodwar.getMinerals().Where(patch => patch.getResources() > 0);
         }
 
         /// <summary>

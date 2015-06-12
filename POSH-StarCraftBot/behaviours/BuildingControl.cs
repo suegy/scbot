@@ -19,9 +19,8 @@ namespace POSH_StarCraftBot.behaviours
 
         public BuildingControl(AgentBase agent)
             : base(agent, 
-            new string[] { "SelectExtractorLocation", "BuildExtractor", 
-                "SelLocSpwnPl", "BuildSpwnPl", "SelSecondBase", "BuildHatchery", "UpgradeHatchery" },
-            new string[] { "HatcheryCount", "ExtractorCount", "NeedBuilding" })
+            new string[] {},
+            new string[] {})
         {
             extentionBases = new HashSet<TilePosition>();
         }
@@ -123,6 +122,7 @@ namespace POSH_StarCraftBot.behaviours
             if (activeBase == null)
                 activeBase = Interface().GetHatcheries().Where(hatchery => hatchery.getPlayer().getID() == Interface().Self().getID()).First().getTilePosition();
 
+            // TODO: this needs to be changed to a better location around the base taking exits and resources into account
             buildPosition= PossibleBuildLocation(activeBase, 10, 0, 10, this.builder, bwapi.UnitTypes_Zerg_Spawning_Pool);
             if (buildPosition != null)
             {

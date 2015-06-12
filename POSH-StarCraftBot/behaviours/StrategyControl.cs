@@ -11,7 +11,7 @@ namespace POSH_StarCraftBot.behaviours
     class StrategyControl : AStarCraftBehaviour
     {
         public StrategyControl(AgentBase agent)
-            : base(agent, new string[] { "Idle" }, new string[] { "AvailableSupply", "TotalSupply", "Gas", "Minerals", "BuildArmy" })
+            : base(agent, new string[] {}, new string[] {})
         {
 
         }
@@ -39,6 +39,12 @@ namespace POSH_StarCraftBot.behaviours
         //
         // SENSES
         //
+
+        [ExecutableSense("GameRunning")]
+        public bool GameRunning()
+        {
+            return Interface().GameRunning();
+        }
 
         [ExecutableSense("TotalSupply")]
         public int SupplyCount()

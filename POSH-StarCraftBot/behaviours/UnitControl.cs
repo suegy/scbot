@@ -15,8 +15,8 @@ namespace POSH_StarCraftBot.behaviours
 
         public UnitControl(AgentBase agent)
             : base(agent, 
-            new string[] { "MorphDrone", "MorphZergling", "MorphOverlord", "MorphHydralisk", "DronesToMineral" },
-            new string[] { "DroneCount", "ZerglingCount", "IdleDrones" })
+            new string[] {},
+            new string[] {})
         {
             minedPatches = new Dictionary<Position, int>();
         }
@@ -96,7 +96,7 @@ namespace POSH_StarCraftBot.behaviours
         public bool MorphOverlord()
         {
             int amount = 1;
-            if (CanMorphUnit(bwapi.UnitTypes_Zerg_Zergling))
+            if (CanMorphUnit(bwapi.UnitTypes_Zerg_Overlord))
                 return Interface().
                     GetLarvae(amount).
                     All(larva => larva.morph(bwapi.UnitTypes_Zerg_Overlord));
@@ -122,26 +122,29 @@ namespace POSH_StarCraftBot.behaviours
             IEnumerable<Unit> drones = Interface().GetIdleDrones();
             IEnumerable<Unit> mineralPatches = Interface().GetMineralPatches();
 
-            if (drones.Count() < 1)
+            if (drones.Count() < 1 || mineralPatches.Count() < 1)
                 return false;
 
             foreach (Unit drone in drones)
             {
-                Position pos = mineralPatches.
+                Unit pos = mineralPatches.
                     Where(patch => patch.hasPath(drone)).
-                    OrderBy(patch => patch.getDistance(drone)).ElementAt(0).getPosition();
+                    OrderBy(patch => patch.getDistance(drone)).ElementAt(0);
                 
                 int i = 0;
-                while (minedPatches.ContainsKey(pos) && minedPatches[pos] >= 4)
+                while (minedPatches.ContainsKey(pos.getPosition()) && minedPatches[pos.getPosition()] >= 4)
                 {
                     //FIXME: this could potentially lead into a null pointer exception because the available patches could be less than the minded ones
                     pos = mineralPatches.
                     Where(patch => patch.hasPath(drone)).
-                    OrderBy(patch => patch.getDistance(drone)).ElementAt(++i).getPosition();
+                    OrderBy(patch => patch.getDistance(drone)).ElementAt(++i);
                 }
 
-                drone.rightClick(pos);
-                minedPatches[pos]++;
+                drone.gather(pos);
+                if (minedPatches.ContainsKey(pos.getPosition()))
+                    minedPatches[pos.getPosition()] += 1;
+                else
+                    minedPatches[pos.getPosition()] = 1;
             }
             
 

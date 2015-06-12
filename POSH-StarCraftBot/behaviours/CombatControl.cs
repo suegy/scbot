@@ -10,7 +10,7 @@ namespace POSH_StarCraftBot.behaviours
     class CombatControl : AStarCraftBehaviour
     {
         public CombatControl(AgentBase agent)
-            : base(agent, new string[] { "RetreatForce", "AttackBase" }, new string[] { "AttackPrepared", "ForceIsLosing", "BaseUnderAttack" })
+            : base(agent, new string[] {}, new string[] {})
         {
 
         }
