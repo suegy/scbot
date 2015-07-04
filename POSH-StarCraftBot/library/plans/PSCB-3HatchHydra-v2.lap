@@ -8,7 +8,7 @@
 	RetreatForce
 ))
 (AP buildSP (minutes 1.0) (
-	SelLocSpwnPl 
+	PositionSpwnPl 
 	BuildSpwnPl
 ))
 (AP buildExtractor (minutes 1.0) (

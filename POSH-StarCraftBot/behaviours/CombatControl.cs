@@ -4,11 +4,15 @@ using System.Linq;
 using System.Text;
 using POSH.sys;
 using POSH.sys.annotations;
+using SWIG.BWAPI;
 
 namespace POSH_StarCraftBot.behaviours
 {
     class CombatControl : AStarCraftBehaviour
     {
+
+        public Dictionary<int,Unit> enemyBuildings;
+
         public CombatControl(AgentBase agent)
             : base(agent, new string[] {}, new string[] {})
         {
@@ -40,7 +44,8 @@ namespace POSH_StarCraftBot.behaviours
         [ExecutableSense("BaseUnderAttack")]
         public bool BaseUnderAttack()
         {
-            return false;
+
+            return (Interface().GetAllBuildings().Where(building => building.isUnderAttack()).Count() > 0);
         }
 
         [ExecutableSense("ForceIsLosing")]

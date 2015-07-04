@@ -5,25 +5,53 @@ using System.Text;
 using POSH.sys;
 using POSH.sys.annotations;
 using SWIG.BWAPI;
+using SWIG.BWTA;
 
 namespace POSH_StarCraftBot.behaviours
 {
     public class UnitControl : AStarCraftBehaviour
     {
+        /// <summary>
+        /// The int value key is identifying the location on the map by shifting the x corrdinate three digits to the left and adding the y value. 
+        /// An example would be the position P(122,15) results in the key k=122015
+        /// </summary>
+        private Dictionary<int, List<Unit>> minedPatches;
+        /// <summary>
+        /// The int value key is identifying the location on the map by shifting the x corrdinate three digits to the left and adding the y value. 
+        /// An example would be the position P(122,15) results in the key k=122015
+        /// </summary>
+        private Dictionary<int, List<Unit>> minedGas;
+        
+        /// <summary>
+        /// The dict key is UnitType.getID() which is a numerical representation of the type The UnitType itself 
+        /// would not work as a key due to a wrong/missing implementation of the hash
+        /// </summary>
+        private Dictionary<int, List<Unit>> morphingUnits;
 
-        private Dictionary<Position, int> minedPatches;
+
 
         public UnitControl(AgentBase agent)
             : base(agent, 
             new string[] {},
             new string[] {})
         {
-            minedPatches = new Dictionary<Position, int>();
+            minedPatches = new Dictionary<int, List<Unit>>(); 
+            minedGas = new Dictionary<int, List<Unit>>();
+            morphingUnits = new Dictionary<int, List<Unit>>();
         }
 
         //
         // INTERNAL
         //
+
+        protected int CheckForMorphingUnits(UnitType type)
+        {
+            if (!morphingUnits.ContainsKey(type.getID()))
+                return 0;
+            morphingUnits[type.getID()].RemoveAll(unit=> !unit.isMorphing());
+
+            return morphingUnits[type.getID()].Count;
+        }
 
         protected internal Unit GetDrone()
         {
@@ -33,6 +61,87 @@ namespace POSH_StarCraftBot.behaviours
             // this is especially the case if it is the last drone mining
             
             return (Interface().GetDrones(1).Count() > 0) ? Interface().GetDrones(1).ElementAt(0) : null;
+        }
+
+        private int ConvertTilePosition(TilePosition pos)
+        {
+            return (pos.xConst() * 1000) + pos.yConst();
+        }
+
+        public bool DronesToResource(IEnumerable<Unit> resources, Dictionary<int, List<Unit>> mined, int threshold, bool onlyIdle,int maxUnits)
+        {
+            IEnumerable<Unit> drones;
+
+            if (onlyIdle)
+                drones = Interface().GetIdleDrones();
+            else
+                drones = Interface().GetDrones(maxUnits);
+           
+            if (drones.Count() < 1 || resources.Count() < 1)
+                return false;
+
+            // update all minded Patches by removing non harvesting drones or dead ones
+            foreach (KeyValuePair<int, List<Unit>> patch in minedPatches)
+            {
+                patch.Value.RemoveAll(drone => (drone.getHitPoints() <= 0 || drone.getOrderTarget() == null || ConvertTilePosition(drone.getOrderTarget().getTilePosition()) != patch.Key));
+            }
+
+            foreach (Unit drone in drones)
+            {
+
+                IEnumerable<Unit> patchPositions = resources.
+                    Where(patch => patch.hasPath(drone)).
+                    OrderBy(patch => drone.getTilePosition().getDistance(patch.getTilePosition()));
+                Unit finalPatch = patchPositions.First();
+                int positionValue;
+
+                foreach (Unit position in patchPositions)
+                {
+                    positionValue = ConvertTilePosition(position.getTilePosition());
+                    // a better distribution over resources would be beneficial 
+                    if (!mined.ContainsKey(positionValue) || mined[positionValue].Count <= threshold)
+                    {
+                        finalPatch = position;
+                        break;
+                    }
+
+                }
+
+                drone.rightClick(finalPatch);
+                positionValue = ConvertTilePosition(finalPatch.getTilePosition());
+                if (!mined.ContainsKey(positionValue))
+                {
+                    mined.Add( positionValue ,new List<Unit>());
+                }
+
+                mined[positionValue].Add(drone);
+            }
+
+            return true;
+        }
+
+        protected bool MorphUnit(UnitType type)
+        {
+
+            if (CanMorphUnit(type))
+            {
+                Unit larva = Interface().GetLarvae().OrderBy(unit => unit.getTilePosition().getDistance(Interface().baseLocations[(int)Interface().currentBuildSite])).First();
+                bool morphWorked = larva.morph(type);
+
+                // create new list to monitor specific type of unit
+                if (!morphingUnits.ContainsKey(type.getID()))
+                    morphingUnits[type.getID()] = new List<Unit>();
+
+                // adding the moved unit to the appropriate unit list
+                if (morphingUnits[type.getID()].Where(unit => unit.getID() == larva.getID()).Count() == 0)
+                    morphingUnits[type.getID()].Add(larva);
+
+                if (morphWorked)
+                    larva.move(new Position(Interface().forcePoints[(int)Interface().currentForcePoint]));
+                return morphWorked;
+
+            }
+            return false;
         }
 
 
@@ -49,19 +158,36 @@ namespace POSH_StarCraftBot.behaviours
         [ExecutableSense("DroneCount")]
         public int DroneCount()
         {
-            return Interface().DroneCount();
+            return Interface().DroneCount() + CheckForMorphingUnits(bwapi.UnitTypes_Zerg_Drone);
+        }
+
+        [ExecutableSense("OverlordCount")]
+        public int OverlordCount()
+        {
+            return Interface().OverlordCount() + CheckForMorphingUnits(bwapi.UnitTypes_Zerg_Overlord);
         }
 
         [ExecutableSense("ZerglingCount")]
         public int ZerglingCount()
         {
-            return Interface().ZerglingCount();
+            return Interface().ZerglingCount() + CheckForMorphingUnits(bwapi.UnitTypes_Zerg_Zergling);
         }
 
         [ExecutableSense("HydraliskCount")]
         public int HydraliskCount()
         {
-            return Interface().HydraliskCount();
+            return Interface().HydraliskCount() + CheckForMorphingUnits(bwapi.UnitTypes_Zerg_Hydralisk);
+        }
+        [ExecutableSense("MutaliskCount")]
+        public int MutaliskCount()
+        {
+            return Interface().MutaliskCount() + CheckForMorphingUnits(bwapi.UnitTypes_Zerg_Mutalisk);
+        }
+
+        [ExecutableSense("LurkerCount")]
+        public int LurkerCount()
+        {
+            return Interface().LurkerCount() + CheckForMorphingUnits(bwapi.UnitTypes_Zerg_Lurker);
         }
 
         //
@@ -71,116 +197,53 @@ namespace POSH_StarCraftBot.behaviours
         [ExecutableAction("MorphDrone")]
         public bool MorphDrone()
         {
-            int amount = 3;
-            if (CanMorphUnit(bwapi.UnitTypes_Zerg_Drone))
-                return Interface().
-                    GetLarvae(amount).
-                    All(larva => larva.morph(bwapi.UnitTypes_Zerg_Drone));
 
-            return false;
+            return MorphUnit(bwapi.UnitTypes_Zerg_Drone);
         }
 
         [ExecutableAction("MorphZergling")]
         public bool MorphZergling()
         {
-            int amount = 1;
-            if (CanMorphUnit(bwapi.UnitTypes_Zerg_Zergling))
-                return Interface().
-                    GetLarvae(amount).
-                    All(larva => larva.morph(bwapi.UnitTypes_Zerg_Zergling));
-
-            return false;
+            return MorphUnit(bwapi.UnitTypes_Zerg_Zergling);
         }
 
         [ExecutableAction("MorphOverlord")]
         public bool MorphOverlord()
         {
-            int amount = 1;
-            if (CanMorphUnit(bwapi.UnitTypes_Zerg_Overlord))
-                return Interface().
-                    GetLarvae(amount).
-                    All(larva => larva.morph(bwapi.UnitTypes_Zerg_Overlord));
-
-            return false;
+            return MorphUnit(bwapi.UnitTypes_Zerg_Overlord);
         }
 
         [ExecutableAction("MorphHydralisk")]
         public bool MorphHydralisk()
         {
-            int amount = 1;
-            if (CanMorphUnit(bwapi.UnitTypes_Zerg_Hydralisk))
-                return Interface().
-                    GetLarvae(amount).
-                    All(larva => larva.morph(bwapi.UnitTypes_Zerg_Hydralisk));
-
-            return false;
+            return MorphUnit(bwapi.UnitTypes_Zerg_Hydralisk);
         }
 
-        [ExecutableAction("DronesToMineral")]
+        [ExecutableAction("MorphMutalisk")]
+        public bool MorphMutalisk()
+        {
+            return MorphUnit(bwapi.UnitTypes_Zerg_Mutalisk);
+        }
+
+        [ExecutableAction("MorphLurker")]
+        public bool MorphLurker()
+        {
+            return MorphUnit(bwapi.UnitTypes_Zerg_Lurker);
+        }
+
+        [ExecutableAction("AssignDrones")]
         public bool DronesToMineral()
         {
-            IEnumerable<Unit> drones = Interface().GetIdleDrones();
             IEnumerable<Unit> mineralPatches = Interface().GetMineralPatches();
-
-            if (drones.Count() < 1 || mineralPatches.Count() < 1)
-                return false;
-
-            foreach (Unit drone in drones)
-            {
-                Unit pos = mineralPatches.
-                    Where(patch => patch.hasPath(drone)).
-                    OrderBy(patch => patch.getDistance(drone)).ElementAt(0);
-                
-                int i = 0;
-                while (minedPatches.ContainsKey(pos.getPosition()) && minedPatches[pos.getPosition()] >= 4)
-                {
-                    //FIXME: this could potentially lead into a null pointer exception because the available patches could be less than the minded ones
-                    pos = mineralPatches.
-                    Where(patch => patch.hasPath(drone)).
-                    OrderBy(patch => patch.getDistance(drone)).ElementAt(++i);
-                }
-
-                drone.gather(pos);
-                if (minedPatches.ContainsKey(pos.getPosition()))
-                    minedPatches[pos.getPosition()] += 1;
-                else
-                    minedPatches[pos.getPosition()] = 1;
-            }
-            
-
-            return true;
+            return DronesToResource(mineralPatches, minedPatches, 2, true, 0);
         }
 
-        [ExecutableAction("DronesToGas")]
+        [ExecutableAction("AssignToGas")]
         public bool DronesToGas()
         {
-            IEnumerable<Unit> drones = Interface().GetIdleDrones();
             IEnumerable<Unit> extractors = Interface().GetExtractors();
 
-            if (drones.Count() < 1 || extractors.Count() < 1)
-                return false;
-
-            foreach (Unit drone in drones)
-            {
-                Position pos = extractors.
-                    Where(patch => patch.hasPath(drone)).
-                    OrderBy(patch => patch.getDistance(drone)).ElementAt(0).getPosition();
-
-                int i = 0;
-                while (minedPatches.ContainsKey(pos) && minedPatches[pos] >= 4)
-                {
-                    //FIXME: the could potentially lead into a null pointer exception because the available patches could be less than the minded ones
-                    pos = extractors.
-                    Where(patch => patch.hasPath(drone)).
-                    OrderBy(patch => patch.getDistance(drone)).ElementAt(++i).getPosition();
-                }
-
-                drone.rightClick(pos);
-                minedPatches[pos]++;
-            }
-
-
-            return true;
+            return DronesToResource(extractors, minedGas, 6, false, 1);
         }
 
         

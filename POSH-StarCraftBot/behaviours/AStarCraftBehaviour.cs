@@ -15,6 +15,12 @@ namespace POSH_StarCraftBot.behaviours
 
         protected static BWAPI.IStarcraftBot IBWAPI;
 
+        public enum Races { Unknown = 0, Zerg = 1, Protoss = 2, Terran = 3 }
+
+        protected const double DELTADISTANCE = 10L;
+
+        protected const double DELTATIME = 100L;
+
         public AStarCraftBehaviour(AgentBase agent)
             : this(agent, new string[] { }, new string[] { })
         {}
