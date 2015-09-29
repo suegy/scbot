@@ -9,8 +9,10 @@ using SWIG.BWAPI;
 
 namespace POSH_StarCraftBot.behaviours
 {
-    class ResourceControl : AStarCraftBehaviour
+    public class ResourceControl : AStarCraftBehaviour
     {
+        private bool finishedResearch;
+
         public ResourceControl(AgentBase agent)
             : base(agent, new string[] {}, new string[] {})
         {
@@ -35,9 +37,29 @@ namespace POSH_StarCraftBot.behaviours
             return Interface().GetHydraDens().Where(den => !den.isUpgrading() && den.getHitPoints() > 0).First().upgrade(bwapi.UpgradeTypes_Grooved_Spines);
         }
 
+        [ExecutableAction("FinishedResearch")]
+        public bool FinishedResearch()
+        {
+            finishedResearch = true;
+            return finishedResearch;
+        }
+
+
+
         //
         // SENSES
         //
+        [ExecutableSense("StopHydraResearch")]
+        public int StopHydraResearch()
+        {
+            return Interface().TotalSupply();
+        }
+
+        [ExecutableSense("DoneResearch")]
+        public bool DoneResearch()
+        {
+            return finishedResearch;
+        }
 
         [ExecutableSense("TotalSupply")]
         public int TotalSupply()

@@ -16,6 +16,9 @@ namespace POSH_StarCraftBot.behaviours
         /// An example would be the position P(122,15) results in the key k=122015
         /// </summary>
         private Dictionary<int, List<Unit>> minedPatches;
+
+        private bool forceReady = false;
+
         /// <summary>
         /// The int value key is identifying the location on the map by shifting the x corrdinate three digits to the left and adding the y value. 
         /// An example would be the position P(122,15) results in the key k=122015
@@ -91,7 +94,7 @@ namespace POSH_StarCraftBot.behaviours
 
                 IEnumerable<Unit> patchPositions = resources.
                     Where(patch => patch.hasPath(drone)).
-                    OrderBy(patch => drone.getTilePosition().getDistance(patch.getTilePosition()));
+                    OrderBy(patch => drone.getDistance(patch));
                 Unit finalPatch = patchPositions.First();
                 int positionValue;
 
@@ -125,7 +128,7 @@ namespace POSH_StarCraftBot.behaviours
 
             if (CanMorphUnit(type))
             {
-                Unit larva = Interface().GetLarvae().OrderBy(unit => unit.getTilePosition().getDistance(Interface().baseLocations[(int)Interface().currentBuildSite])).First();
+                Unit larva = Interface().GetLarvae().OrderBy(unit => unit.getDistance(new Position(Interface().baseLocations[(int)Interface().currentBuildSite]))).First();
                 bool morphWorked = larva.morph(type);
 
                 // create new list to monitor specific type of unit
@@ -137,17 +140,29 @@ namespace POSH_StarCraftBot.behaviours
                     morphingUnits[type.getID()].Add(larva);
 
                 if (morphWorked)
-                    larva.move(new Position(Interface().forcePoints[(int)Interface().currentForcePoint]));
+                    larva.move(new Position(Interface().forcePoints[Interface().currentForcePoint]));
                 return morphWorked;
 
             }
             return false;
         }
 
+        [ExecutableAction("FinishedForce")]
+        public bool FinishedForce()
+        {
+            forceReady = true;
+            return forceReady;
+        }
 
         //
         // SENSES
         //
+
+        [ExecutableSense("ForceReady")]
+        public bool ForceReady()
+        {
+            return forceReady;
+        }
 
         [ExecutableSense("IdleDrones")]
         public bool IdleDrones()

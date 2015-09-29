@@ -6,6 +6,7 @@ using POSH.sys;
 using POSH.sys.annotations;
 using SWIG.BWAPI;
 using SWIG.BWTA;
+using POSH_StarCraftBot.logic;
 
 namespace POSH_StarCraftBot.behaviours
 {
@@ -17,6 +18,8 @@ namespace POSH_StarCraftBot.behaviours
         Unit buildingToRepair;
         Unit repairDrone;
         Unit builder;
+
+        private bool needBuilding  = true;
         
         /// <summary>
         /// contains the current location and build queue 
@@ -151,7 +154,7 @@ namespace POSH_StarCraftBot.behaviours
             
             // sort by closest path for ground units from selected build base
             TilePosition closest = geysers
-                .OrderBy(geyser => geyser.getTilePosition().getDistance(buildPosition))
+                .OrderBy(geyser => geyser.getDistance(new Position(buildPosition)))
                 .First().getTilePosition();
             
             // if there is a close geyers we are done
@@ -159,7 +162,7 @@ namespace POSH_StarCraftBot.behaviours
             {
                 this.buildLocation = closest;
                 builder.move(new Position(closest));
-                if (builder.getTilePosition().getDistance(closest) < DELTADISTANCE)
+                if (builder.getDistance(new Position(closest)) < DELTADISTANCE)
                     return true;
 
                 return false;
@@ -192,11 +195,11 @@ namespace POSH_StarCraftBot.behaviours
             // TODO: this needs to be changed to a better location around the base taking exits and resources into account
             TilePosition buildPosition = buildPosition = Interface().baseLocations[(int)Interface().currentBuildSite];
 
-            builder = Interface().GetDrones().OrderBy(drone => drone.getTilePosition().getDistance(buildPosition)).First();
+            builder = Interface().GetDrones().OrderBy(drone => drone.getDistance(new Position(buildPosition))).First();
             buildPosition = PossibleBuildLocation(GetBaseLocation(), 10, 0, 10, builder, bwapi.UnitTypes_Zerg_Spawning_Pool);
             this.buildLocation = buildPosition;
             builder.move(new Position(buildPosition));
-            if (builder.getTilePosition().getDistance(buildPosition) < DELTADISTANCE)
+            if (builder.getDistance(new Position(buildPosition)) < DELTADISTANCE)
                 return true;
 
             return false;
@@ -219,12 +222,12 @@ namespace POSH_StarCraftBot.behaviours
             // TODO: this needs to be changed to a better location around the base taking exits and resources into account
             TilePosition buildPosition = Interface().baseLocations[(int)Interface().currentBuildSite];
 
-            builder = Interface().GetDrones().OrderBy(drone => drone.getTilePosition().getDistance(buildPosition)).First();
+            builder = Interface().GetDrones().OrderBy(drone => drone.getDistance(new Position(buildPosition))).First();
             buildPosition = PossibleBuildLocation(GetBaseLocation(), 10, 0, 10, builder, bwapi.UnitTypes_Zerg_Hydralisk_Den);
-            builder = Interface().GetDrones().OrderBy(drone => drone.getTilePosition().getDistance(buildPosition)).First();
+            builder = Interface().GetDrones().OrderBy(drone => drone.getDistance(new Position(buildPosition))).First();
             this.buildLocation = buildPosition;
             builder.move(new Position(buildPosition));
-            if (builder.getTilePosition().getDistance(buildPosition) < DELTADISTANCE)
+            if (builder.getDistance(new Position(buildPosition)) < DELTADISTANCE)
                 return true;
 
             return false;
@@ -242,10 +245,10 @@ namespace POSH_StarCraftBot.behaviours
         {
             TilePosition buildPosition = Interface().baseLocations[(int)Interface().currentBuildSite];
             buildPosition = PossibleBuildLocation(buildPosition, 10, 0, 10, builder, bwapi.UnitTypes_Zerg_Hatchery);
-            builder = Interface().GetDrones().OrderBy(drone => drone.getTilePosition().getDistance(buildPosition)).First();
+            builder = Interface().GetDrones().OrderBy(drone => drone.getDistance(new Position(buildPosition))).First();
 
             builder.rightClick(new Position(buildPosition));
-            if (builder.getTilePosition().getDistance(buildPosition) < DELTADISTANCE)
+            if (builder.getDistance(new Position(buildPosition)) < DELTADISTANCE )
                 return true;
             
             return false;
@@ -273,10 +276,10 @@ namespace POSH_StarCraftBot.behaviours
         {
             TilePosition buildPosition = Interface().baseLocations[(int)Interface().currentBuildSite];
             buildPosition = PossibleBuildLocation(buildPosition, 10, 0, 50, builder, bwapi.UnitTypes_Zerg_Creep_Colony);
-            builder = Interface().GetDrones().OrderBy(drone => drone.getTilePosition().getDistance(buildPosition)).First();
+            builder = Interface().GetDrones().OrderBy(drone => drone.getDistance( new Position(buildPosition)) ).First();
             
             builder.rightClick(new Position(buildPosition));
-            if (builder.getTilePosition().getDistance(buildPosition) < DELTADISTANCE)
+            if (builder.getDistance(new Position(buildPosition)) < DELTADISTANCE )
                 return true;
 
             return false;
@@ -296,7 +299,7 @@ namespace POSH_StarCraftBot.behaviours
 
             double dist = Interface().baseLocations[(int)Interface().currentBuildSite].getDistance(Interface().baseLocations[(int)BuildSite.StartingLocation]) / 3;
 
-            return Interface().GetCreepColonies().Where(col => col.getTilePosition().getDistance(Interface().baseLocations[(int)Interface().currentBuildSite]) < dist)
+            return Interface().GetCreepColonies().Where(col => col.getDistance(new Position(Interface().baseLocations[(int)Interface().currentBuildSite])) < dist)
                 .OrderByDescending(hatch => Interface().baseLocations[(int)Interface().currentBuildSite].getDistance(hatch.getTilePosition()))
                 .ElementAt(0).morph(bwapi.UnitTypes_Zerg_Sunken_Colony);
         }
@@ -309,12 +312,12 @@ namespace POSH_StarCraftBot.behaviours
 
             double dist = Interface().baseLocations[(int)Interface().currentBuildSite].getDistance(Interface().baseLocations[(int)BuildSite.StartingLocation]) / 3;
 
-            return Interface().GetCreepColonies().Where(col => col.getTilePosition().getDistance(Interface().baseLocations[(int)Interface().currentBuildSite]) < dist)
+            return Interface().GetCreepColonies().Where(col => col.getDistance(new Position(Interface().baseLocations[(int)Interface().currentBuildSite])) < dist)
                 .OrderByDescending(hatch => Interface().baseLocations[(int)Interface().currentBuildSite].getDistance(hatch.getTilePosition()))
                 .ElementAt(0).morph(bwapi.UnitTypes_Zerg_Spore_Colony);
         }
 
-        [ExecutableSense("RepairBuilding")]
+        [ExecutableAction("RepairBuilding")]
         public bool RepairBuilding()
         {
             if (repairDrone == null || repairDrone.getHitPoints() <= 0 || buildingToRepair == null || buildingToRepair.getHitPoints() <= 0)
@@ -323,9 +326,24 @@ namespace POSH_StarCraftBot.behaviours
             return repairDrone.repair(buildingToRepair);
         }
 
+
+        [ExecutableAction("FinishedThreeHatchBuilding")]
+        public bool FinishedThreeHatchBuilding()
+        {
+            needBuilding = false;
+
+            return needBuilding;
+        }
+
         //
         // SENSES
         //
+        [ExecutableSense("NeedBuilding")]
+        public bool NeedBuilding()
+        {
+            return needBuilding;
+        }
+
         [ExecutableSense("HatcheryCount")]
         public int HatcheryCount()
         {
@@ -364,13 +382,6 @@ namespace POSH_StarCraftBot.behaviours
             return (builder == null) ? true : false;
         }
 
-        [ExecutableSense("NeedBuilding")]
-        public bool NeedBuilding()
-        {
-            //TODO: change this is analyse if the current build plan is still valid and requires more buildings if not stop
-            return true;
-        }
-
         [ExecutableSense("HaveNaturalHatchery")]
         public bool NaturalHatchery()
         {
@@ -384,12 +395,12 @@ namespace POSH_StarCraftBot.behaviours
             // arbitratry distance measure to determine if the hatchery is closer to the natural or the starting location
             double dist = natural.getDistance(start) / 3;
 
-            if (Interface().GetHatcheries().Where(hatch=> hatch.getTilePosition().getDistance(natural) < dist).Count() >0)
+            if (Interface().GetHatcheries().Where(hatch=> hatch.getDistance(new Position(natural)) < dist).Count() >0)
                 return true;
             
             foreach (Unit unit in this.buildingInProgress.Keys)
                 if (unit.getType().getID() ==  bwapi.UnitTypes_Zerg_Hatchery.getID() &&
-                    unit.getTilePosition().getDistance(natural) < dist )
+                    unit.getDistance(new Position(natural)) < dist )
                     return true;
             
             return false;

@@ -74,10 +74,17 @@
     <Compile Include="behaviours\AStarCraftBehaviour.cs" />
     <Compile Include="behaviours\BuildingControl.cs" />
     <Compile Include="behaviours\CombatControl.cs" />
+    <Compile Include="behaviours\ResourceControl.cs" />
     <Compile Include="behaviours\StrategyControl.cs" />
     <Compile Include="behaviours\UnitControl.cs" />
     <Compile Include="BODStarCraftBot.cs" />
     <Compile Include="Core.cs" />
+    <Compile Include="logic\SCMath.cs" />
+    <Compile Include="logic\TacticalAgent.cs" />
+    <Compile Include="logic\UnitAgent.cs" />
+    <Compile Include="logic\UnitAgentOptimizedProperties.cs" />
+    <Compile Include="logic\UnitCosts.cs" />
+    <Compile Include="logic\WalkTile.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -19,6 +19,7 @@ namespace POSH_StarCraftBot
         protected string botName;
         public static RealTimeTimer Timer { get; private set; }
         private Thread oThread;
+        private Thread bwtaThread;
 
         public Core(AgentBase agent)
             : this(agent, null)
@@ -36,6 +37,7 @@ namespace POSH_StarCraftBot
             // Create the thread object, passing in the method
             // via a ThreadStart delegate. This does not start the thread.
             oThread = new Thread(new ThreadStart(this.RunBot));
+            bwtaThread = new Thread(new ThreadStart(this.RunBWTA));
         }
 
         //
@@ -69,7 +71,8 @@ namespace POSH_StarCraftBot
 
         void loadBot()
         {
-            clients["initBot"] = (BWAPI.IStarcraftBot)new BODStarCraftBot();
+            clients["initBot"] = (BWAPI.IStarcraftBot)new BODStarCraftBot(log);
+            
             //Timer.Reset();
             System.Console.WriteLine("Bot Loaded: OK");
         }
@@ -131,9 +134,8 @@ namespace POSH_StarCraftBot
                             // initializing additional functionality provided by BWTA
                             bwta.readMap();
                             // takes a long time to run
-                            bwta.analyze();
+                            bwtaThread.Start();
                             foreach (BWAPI.IStarcraftBot client in clients.Values)
-
                                 client.onStart();
                             oThread.Start();
                             initDone = true;
@@ -173,8 +175,7 @@ namespace POSH_StarCraftBot
                         case EventType_Enum.MatchStart:
                             // initializing additional functionality provided by BWTA
                             bwta.readMap();
-                            // takes a long time to run
-                            bwta.analyze();
+                            
                             foreach (BWAPI.IStarcraftBot client in clients.Values)
                                 client.onStart();
                             break;
@@ -296,6 +297,11 @@ namespace POSH_StarCraftBot
 
             clients.Add(name, client);
             return true;
+        }
+
+        public void RunBWTA() 
+        { 
+            bwta.analyze();
         }
     }
 }

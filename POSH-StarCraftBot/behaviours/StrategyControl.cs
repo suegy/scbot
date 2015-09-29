@@ -7,15 +7,17 @@ using POSH.sys.annotations;
 using System.Threading;
 using SWIG.BWAPI;
 using SWIG.BWTA;
+using POSH_StarCraftBot.logic;
 
 namespace POSH_StarCraftBot.behaviours
 {
-    
-    public enum Strategy {ThreeHatchHydra = 0, TwoHatchMuta = 1, Zergling = 2}
 
-    class StrategyControl : AStarCraftBehaviour
+    public enum Strategy { ThreeHatchHydra = 0, TwoHatchMuta = 1, Zergling = 2 }
+
+    public class StrategyControl : AStarCraftBehaviour
     {
         private Unit scout;
+        private Position lureCentroid;
         private Unit droneScout;
         /// <summary>
         /// The scout counter contains the number of bases we already discovered moving from Startlocation towards the most distant ones.
@@ -23,14 +25,14 @@ namespace POSH_StarCraftBot.behaviours
         /// </summary>
         private int scoutCounter = 1;
         private bool reachedBaseLocation = false;
-        private Strategy currentStrategy; 
+        private Strategy currentStrategy;
         private bool startStrategy = true;
-        private bool alarm = false;
+        private float alarm = 0.0f;
         private GamePhase phase;
 
 
         public StrategyControl(AgentBase agent)
-            : base(agent, new string[] {}, new string[] {})
+            : base(agent, new string[] { }, new string[] { })
         {
 
         }
@@ -82,28 +84,68 @@ namespace POSH_StarCraftBot.behaviours
                 return false;
             }
         }
-        
+
         [ExecutableAction("RespondToLure")]
         public bool RespondToLure()
         {
             IEnumerable<Unit> drones = Interface().GetDrones().Where(drone => drone.isUnderAttack());
+
+            if (drones.Count() > 1)
+                lureCentroid = CombatControl.CalculateCentroidPosition(drones);
             foreach (Unit drone in drones)
             {
-                if (drone.isCarryingMinerals()) 
+                if (drone.isCarryingMinerals())
                 {
                     drone.gather(Interface().GetExtractors().OrderBy(extr => extr.getDistance(drone)).First());
-                } else if (drone.isCarryingGas()) 
+                }
+                else if (drone.isCarryingGas())
                 {
                     drone.gather(Interface().GetMineralPatches().OrderBy(extr => extr.getDistance(drone)).First());
-                } else 
+                }
+                else
                 {
                     drone.move(new Position(Interface().baseLocations[(int)BuildSite.StartingLocation]));
                 }
-                alarm = true;
-                
+                alarm += 0.1f;
+
             }
-            
-            return alarm;
+
+            return alarm > 0 ? true : false;
+        }
+
+
+        [ExecutableAction("SelectLuredBase")]
+        public bool SelectLuredBase()
+        {
+            int location = Interface().baseLocations.OrderBy(loc => new Position(loc.Value).getApproxDistance(lureCentroid)).First().Key;
+            ForceLocations target;
+            switch (location)
+            {
+                case (int)ForceLocations.OwnStart:
+                    target = ForceLocations.OwnStart;
+                    break;
+                case (int)ForceLocations.Natural:
+                    target = ForceLocations.Natural;
+                    break;
+                case (int)ForceLocations.Extension:
+                    target = ForceLocations.Extension;
+                    break;
+                default:
+                    target = ForceLocations.Natural;
+                    break;
+
+            }
+            Interface().currentForcePoint = target;
+            return true;
+
+
+        }
+
+        [ExecutableAction("CounterWithForce")]
+        public bool CounterWithForce()
+        {
+            //TODO: this needs to be implemented
+         return false;
         }
 
         /// <summary>
@@ -113,20 +155,20 @@ namespace POSH_StarCraftBot.behaviours
         [ExecutableAction("OverLordToNatural")]
         public bool OverLordToNatural()
         {
-            if (Interface().baseLocations[(int)BuildSite.Natural] is TilePosition || (scout is Unit && scout.getHitPoints() > 0 && scout.isMoving() ) )
+            if (Interface().baseLocations[(int)BuildSite.Natural] is TilePosition || (scout is Unit && scout.getHitPoints() > 0 && scout.isMoving()))
                 return false;
             TilePosition startLoc = Interface().baseLocations[(int)BuildSite.StartingLocation];
 
             if (scout == null || scout.getHitPoints() == 0)
                 scout = Interface().GetOverlord().Where(ol => !ol.isMoving()).OrderByDescending(ol => ol.getTilePosition().getDistance(startLoc)).First();
 
-            BaseLocation[] pos = bwta.getBaseLocations().Where(baseLoc => bwta.getGroundDistance(startLoc, baseLoc.getTilePosition()) > 0 ).OrderBy(baseLoc => bwta.getGroundDistance(startLoc, baseLoc.getTilePosition())).ToArray();
+            BaseLocation[] pos = bwta.getBaseLocations().Where(baseLoc => bwta.getGroundDistance(startLoc, baseLoc.getTilePosition()) > 0).OrderBy(baseLoc => bwta.getGroundDistance(startLoc, baseLoc.getTilePosition())).ToArray();
 
             for (int i = 0; i < pos.Length; i++)
                 Console.Out.WriteLine("loc" + i + " " + bwta.getGroundDistance(pos[i].getTilePosition(), startLoc) + " " + pos[i].getTilePosition().getDistance(startLoc));
 
             scout.rightClick(new Position(pos[0].getTilePosition()));
-            
+
             return true;
         }
 
@@ -134,7 +176,7 @@ namespace POSH_StarCraftBot.behaviours
         public bool SelectDroneScout()
         {
             Unit scout = null;
-            IEnumerable<Unit> units = Interface().GetDrones().Where(drone => 
+            IEnumerable<Unit> units = Interface().GetDrones().Where(drone =>
                 drone.getHitPoints() > 0 &&
                 !drone.isMorphing());
 
@@ -158,7 +200,7 @@ namespace POSH_StarCraftBot.behaviours
         [ExecutableAction("DroneScouting")]
         public bool DroneScouting()
         {
-            if (droneScout == null || droneScout.getHitPoints() <= 0) 
+            if (droneScout == null || droneScout.getHitPoints() <= 0)
                 return false;
 
             if (scoutCounter == bwta.getBaseLocations().Count() - 1)
@@ -196,7 +238,8 @@ namespace POSH_StarCraftBot.behaviours
         [ExecutableAction("PursueThreeHatchHydra")]
         public bool PursueThreeHatchHydra()
         {
-            str
+            currentStrategy = Strategy.ThreeHatchHydra;
+            return (currentStrategy == Strategy.ThreeHatchHydra) ? true : false;
         }
 
         [ExecutableAction("SelectChoke")]
@@ -207,15 +250,15 @@ namespace POSH_StarCraftBot.behaviours
             TilePosition start = Interface().baseLocations[(int)BuildSite.StartingLocation];
             TilePosition targetChoke = null;
             Chokepoint chokepoint = null;
-            
+
             if (site != BuildSite.StartingLocation)
             {
-                targetChoke = Interface().baseLocations[(int)BuildSite.Natural];
+                targetChoke = Interface().baseLocations[(int)site];
                 double distance = start.getDistance(targetChoke);
 
                 // find some kind of measure to determine if the the closest choke to natural is not the once between choke and start but after the natural
                 IEnumerable<Chokepoint> chokes = bwta.getChokepoints().Where(ck => bwta.getGroundDistance(new TilePosition(ck.getCenter()), start) > 0).OrderBy(choke => choke.getCenter().getDistance(new Position(targetChoke)));
-                 
+
 
                 foreach (Chokepoint ck in chokes)
                 {
@@ -239,8 +282,8 @@ namespace POSH_StarCraftBot.behaviours
                 return false;
 
             //picking the right side of the choke to position forces
-            Interface().forcePoints[(int)ForceLocations.NaturalChoke] = (targetChoke.getDistance(new TilePosition(chokepoint.getSides().first)) < targetChoke.getDistance(new TilePosition(chokepoint.getSides().second))) ? new TilePosition(chokepoint.getSides().first) : new TilePosition(chokepoint.getSides().second);
-            Interface().currentForcePoint = (int)ForceLocations.NaturalChoke;
+            Interface().forcePoints[ForceLocations.NaturalChoke] = (targetChoke.getDistance(new TilePosition(chokepoint.getSides().first)) < targetChoke.getDistance(new TilePosition(chokepoint.getSides().second))) ? new TilePosition(chokepoint.getSides().first) : new TilePosition(chokepoint.getSides().second);
+            Interface().currentForcePoint = ForceLocations.NaturalChoke;
 
             return true;
 
@@ -249,6 +292,24 @@ namespace POSH_StarCraftBot.behaviours
         //
         // SENSES
         //
+
+        [ExecutableSense("CanCreateUnits")]
+        public bool CanCreateUnits()
+        {
+            if (Interface().GetLarvae().Count() == 0)
+                return false;
+            switch (currentStrategy){
+                case Strategy.ThreeHatchHydra:
+                    return (Interface().GetHydraDens().Count() > 0) ? true : false;
+                case Strategy.TwoHatchMuta:
+                    return (Interface().GetLairs().Count() > 0 && Interface().GetSpire().Count() > 0) ? true : false;
+                case Strategy.Zergling:
+                    return (Interface().GetHatcheries().Count() > 0 || Interface().GetLairs().Count() > 0 ) ? true : false;
+                default:
+                    break;
+            }
+            return false;
+        }
 
         [ExecutableSense("DoneExploring")]
         public bool DoneExploring()
@@ -266,9 +327,9 @@ namespace POSH_StarCraftBot.behaviours
                 return true;
             TilePosition startLoc = Interface().baseLocations[(int)BuildSite.StartingLocation];
             BaseLocation[] pos = bwta.getBaseLocations().Where(
-                baseLoc => bwta.getGroundDistance(startLoc, baseLoc.getTilePosition()) > 0 && 
+                baseLoc => bwta.getGroundDistance(startLoc, baseLoc.getTilePosition()) > 0 &&
                 bwta.getGroundDistance(startLoc, baseLoc.getTilePosition()) > 0 &&
-                Interface().baseLocations.Values.Where(location => location.getDistance(baseLoc.getTilePosition())< DELTADISTANCE).Count() == 0
+                Interface().baseLocations.Values.Where(location => location.getDistance(baseLoc.getTilePosition()) < DELTADISTANCE).Count() == 0
                 )
                 .OrderBy(baseLoc => bwta.getGroundDistance(startLoc, baseLoc.getTilePosition())).ToArray();
 
@@ -293,10 +354,10 @@ namespace POSH_StarCraftBot.behaviours
         /// </summary>
         /// <returns></returns>
         [ExecutableSense("EnemyRace")]
-        private int EnemyRace()
+        public int EnemyRace()
         {
             // currently we only expect 1-on-1 matches so there should be only one other player in the game
-            
+
             int enemyRace = Interface().ActivePlayers.First().Value.getRace().getID();
             if (enemyRace == bwapi.Races_Unknown.getID())
             {
@@ -318,7 +379,7 @@ namespace POSH_StarCraftBot.behaviours
                 Interface().enemyRace = Races.Terran;
                 return (int)Races.Terran;
             }
-            
+
             return -1;
         }
 
@@ -345,16 +406,6 @@ namespace POSH_StarCraftBot.behaviours
             return (int)currentStrategy;
         }
 
-        [ExecutableSense("EnemyDetected")]
-        public int EnemyDetected()
-        {
-            IEnumerable<Unit> units = Interface().UnitShow.Where(pair=> pair.Key < (Core.Timer.Time() - DELTATIME)).OrderByDescending(pair=> pair.Key).Select(pair => pair.Value);
-            if (units.Count() > 0)
-                return 1;
-            return 0;
-        }
-
-
         [ExecutableSense("BuildArmy")]
         public bool BuildArmy()
         {
@@ -374,10 +425,18 @@ namespace POSH_StarCraftBot.behaviours
             return Interface().GetDrones().Where(drone => drone.isUnderAttack()).Count() > 0;
         }
 
+        [ExecutableSense("Alarm")]
+        public float Alarm()
+        {
+            alarm = (alarm < 0.0f) ? 0.0f : alarm - 0.05f;
+
+            return alarm;
+        }
+
         [ExecutableSense("DroneScoutAvailable")]
         public bool DroneScoutAvailable()
         {
-            return (droneScout is Unit && droneScout.getHitPoints() > 0 ) ? true: false;
+            return (droneScout is Unit && droneScout.getHitPoints() > 0) ? true : false;
         }
 
 

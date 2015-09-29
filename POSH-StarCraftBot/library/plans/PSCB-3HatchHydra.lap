@@ -35,9 +35,9 @@
 	PositionHydraDen 
 	BuildHydraDen
 ))
-(AP LuredDefence (minutes 1.0) (
+(AP luredDefence (minutes 1.0) (
 	SelectLuredBase 
-	someComposite
+	CounterWithForce
 ))
 (AP buildThirdHatchery (seconds 1.0) (
 	SelectStartBase 
@@ -53,6 +53,15 @@
 	SelectStartBase 
 	SelectChoke 
 	MorphHydralisk
+))
+(AP stdHydraArmy (minutes 1.0) (
+	SelectForceStartingLocation 
+	AssignArmyOne
+))
+(AP moveArmyOne (minutes 1.0) (
+	SelectArmyOne 
+	AttackEnemyMainBase 
+	FinishedForce
 ))
 (C buildThreeHatchHydra (minutes 1.0) (goal ((NeedBuilding 0 ==)))
 	(elements
@@ -75,7 +84,7 @@
 (C stopLuring (seconds 1.0) (goal ((DronesLured 0.0 ==)))
 	(elements
 		(	(CheckLuring (trigger ((DronesLured 1.0 ==))) counterLure)	)
-		(	(buildDefence (trigger ((Alarm 0.5 >=))) LuredDefence)	)
+		(	(buildDefence (trigger ((Alarm 0.5 >=))) luredDefence)	)
 	)
 )
 (C extendWorldKnowledge (seconds 1.0) (goal ((GameRunning 1.0 !=)))
@@ -87,8 +96,8 @@
 (C droneHarvesting (seconds 1.0) (goal ((Success 1.0 !=)))
 	(elements
 		(	(luredDrones (trigger ((DronesLured))) stopLuring)	)
-		(	(miningGas (trigger ((ExtractorCount 1.0 >=) (DroneExtractorRatio 0.25 <=))) AssignToGas)	)
 		(	(miningCrystal (trigger ((IdleDrones))) AssignDrones)	)
+		(	(miningGas (trigger ((ExtractorCount 1.0 >=) (DroneExtractorRatio 0.25 <=))) AssignToGas)	)
 	)
 )
 (C buildThreeHatchHydraForce (seconds 1.0) (goal ((Success 0.0 ==)))
@@ -97,16 +106,16 @@
 		(	(buildZerglings (trigger ((Supply 14.0 ==) (Supply 15.0 <))) zergling)	)
 	)
 )
-(C researchThreeHatch (seconds 1.0) (goal ((StopHydraResearch 1.0 ==)))
+(C researchThreeHatch (seconds 1.0) (goal ((HaveHydraRange 1.0 ==) (HaveHydraSpeed)))
 	(elements
 		(	(resHydraSpeed (trigger ((HaveHydraSpeed))) HydraSpeedUpgrade)	)
 		(	(resHydraRange (trigger ((HaveHydraRange))) HydraRangeUpgrade)	)
+		(	(doneResearch (trigger ((Success))) FinishedResearch)	)
 	)
 )
 (C strategySelection (seconds 1.0) (goal ((Success 1.0 !=)))
 	(elements
-		(	(UnknownEnemy (trigger ((EnemyRace 0.0 ==))) PursueThreeHatchHydra)	)
-		(	(Protoss (trigger ((EnemyRace 2.0 ==))) PursueThreeHatchHydra)	)
+		(	(UnknownEnemy (trigger ((EnemyRace 0.0 ==))) PursueThreeHatchHydra)	(Protoss (trigger ((EnemyRace 2.0 ==))) PursueThreeHatchHydra)	)
 	)
 )
 (C droneScouting (seconds 1.0) (goal ((DoneExploring)))
@@ -120,7 +129,7 @@
 		(	(repairBuilding (trigger ((FindDamagedBuilding))) RepairBuilding)	)
 	)
 )
-(C buildBases (seconds 1.0) (goal ((NeedToBuild 0.0 ==)))
+(C buildBases (seconds 1.0) (goal ((NeedBuilding 0.0 ==)))
 	(elements
 		(	(threeHatchHydra (trigger ((FollowStrategy 0.0 ==))) buildThreeHatchHydra)	)
 	)
@@ -135,6 +144,17 @@
 		(	(threeHatch (trigger ((FollowStrategy 0.0 ==))) researchThreeHatch)	)
 	)
 )
+(C attackThreeHatchHydra (seconds 1.0) (goal ((GameRunning)))
+	(elements
+		(	(attackArmyOne (trigger ((ArmyOneReady) (KnowEnemyBase))) moveArmyOne)	)
+		(	(buildArmyOne (trigger ((HaveHydraSpeed) (HaveHydraRange) (HydraliskCount 24.0 >=) (ArmyOneReady 0.0 ==))) stdHydraArmy)	)
+	)
+)
+(C attackEnemy (minutes 1.0) (goal ((GameRunning 0.0 ==)))
+	(elements
+		(	(attackThreeHatch (trigger ((HydraliskCount 24.0 >=))) attackThreeHatchHydra)	)
+	)
+)
 (SDC ThreeHatchHydra (goal ((GameRunning)))
 	(drives
 		(
@@ -145,10 +165,13 @@
 		(defend (trigger ((BaseUnderAttack 1.0 =))) defendBase))
 		(
 
+		(attack (trigger ((ForceReady))) attackEnemy(seconds 0.4)))
+		(
+
 		(retreat (trigger ((ForceIsLosing 1.0 =))) defendBase))
 		(
 
-		(harvest (trigger ((DroneCount 1.0 >=))) droneHarvesting)		(
+		(harvest (trigger ((DroneCount 1.0 >=))) droneHarvesting)		
 
 		(repair (trigger ((BuildingDamaged 1.0 ==))) repairBuildings(seconds 0.5)))
 		(
