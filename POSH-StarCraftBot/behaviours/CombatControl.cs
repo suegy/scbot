@@ -195,7 +195,7 @@ namespace POSH_StarCraftBot.behaviours
         protected bool AttackLocation(ForceLocations location)
         {
             TacticalAgent agent = null;
-
+            
             if (fights.ContainsKey(location))
                 agent = fights[location];
             else if (selectedForce != null && selectedForce.Count > 0)

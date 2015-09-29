@@ -92,13 +92,19 @@ namespace POSH_StarCraftBot
             if (ActivePlayers.ContainsKey(Self().getName()))
                 ActivePlayers.Remove(Self().getName());
 
-            // initiating the starting location
-            if (Self().getStartLocation() is TilePosition)
-                baseLocations[(int)BuildSite.StartingLocation] = Self().getStartLocation();
             forces = new Dictionary<ForceLocations, List<UnitAgent>>();
             forcePoints = new Dictionary<ForceLocations, TilePosition>();
-            currentForcePoint = 0;
 
+                // initiating the starting location
+            if (Self().getStartLocation() is TilePosition)
+            {
+                baseLocations[(int)BuildSite.StartingLocation] = Self().getStartLocation();
+                forcePoints[ForceLocations.OwnStart] = Self().getStartLocation();
+
+            }
+
+            currentForcePoint = ForceLocations.OwnStart;
+            currentBuildSite = BuildSite.StartingLocation;
         }
         //
         // own Player

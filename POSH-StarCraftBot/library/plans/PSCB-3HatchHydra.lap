@@ -155,14 +155,14 @@
 		(	(attackThreeHatch (trigger ((HydraliskCount 24.0 >=))) attackThreeHatchHydra)	)
 	)
 )
-(SDC ThreeHatchHydra (goal ((GameRunning)))
+(SDC ThreeHatchHydra (goal ((GameRunning 0.0 ==)))
 	(drives
 		(
 
 		(strategize (trigger ((GameRunning 1.0 ==))) strategySelection(seconds 1.0)))
 		(
 
-		(defend (trigger ((BaseUnderAttack 1.0 =))) defendBase))
+		(defend (trigger ((BaseUnderAttack 1.0 =))) defendBase(seconds 1.0)))
 		(
 
 		(attack (trigger ((ForceReady))) attackEnemy(seconds 0.4)))
@@ -171,12 +171,12 @@
 		(retreat (trigger ((ForceIsLosing 1.0 =))) defendBase))
 		(
 
-		(harvest (trigger ((DroneCount 1.0 >=))) droneHarvesting)		
+		(harvest (trigger ((DroneCount 1.0 >=))) droneHarvesting(seconds 0.5))		
 
 		(repair (trigger ((BuildingDamaged 1.0 ==))) repairBuildings(seconds 0.5)))
 		(
 
-		(createForce (trigger ((CanCreateUnits))) createUnits))
+		(createForce (trigger ((CanCreateUnits))) createUnits(seconds 0.5)))
 		(
 
 		(build (trigger ((NeedBuilding 1.0 ==))) buildBases(seconds 0.25)))

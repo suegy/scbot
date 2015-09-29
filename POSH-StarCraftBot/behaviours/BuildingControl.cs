@@ -48,7 +48,7 @@ namespace POSH_StarCraftBot.behaviours
         //
         private TilePosition GetBaseLocation()
         {
-            TilePosition baseLoc = Interface().baseLocations[(int)Interface().currentBuildSite];
+            TilePosition baseLoc = Interface().baseLocations.ContainsKey((int)Interface().currentBuildSite) ? Interface().baseLocations[(int)Interface().currentBuildSite] : null;
             if (!(baseLoc is TilePosition))
                 baseLoc = Interface().baseLocations[(int)BuildSite.StartingLocation];
 
@@ -80,7 +80,7 @@ namespace POSH_StarCraftBot.behaviours
         protected int CountUnbuiltBuildings(UnitType type)
         {
             int count = 0;
-            if (!(buildQueue[type.getID()] is Dictionary<Unit,TilePosition>))
+            if (!buildQueue.ContainsKey(type.getID()) || !(buildQueue[type.getID()] is Dictionary<Unit,TilePosition>))
                 return count;
 
             foreach (Unit unit in buildQueue[type.getID()].Keys)
@@ -88,6 +88,7 @@ namespace POSH_StarCraftBot.behaviours
                 if (unit.isBeingConstructed() || (unit.isConstructing() && unit.getTargetPosition().opEquals(new Position(buildQueue[type.getID()][unit]))))
                 {
                     buildingInProgress[unit] = unit.getTilePosition();
+                    count++;
                 }
                 else if (unit.getHitPoints() == 0 || !unit.getTargetPosition().opEquals(new Position(buildQueue[type.getID()][unit])) || unit.isCompleted())
                 {
@@ -141,10 +142,10 @@ namespace POSH_StarCraftBot.behaviours
         public bool SelectExtractorLocation()
         {
             // enough resources available?
-            if (!CanMorphUnit(bwapi.UnitTypes_Zerg_Extractor))
+            if (!CanMorphUnit(bwapi.UnitTypes_Zerg_Extractor) || !Interface().baseLocations.ContainsKey((int)Interface().currentBuildSite))
                 return false;
 
-            TilePosition buildPosition = buildPosition = Interface().baseLocations[(int)Interface().currentBuildSite];
+            TilePosition buildPosition = Interface().baseLocations[(int)Interface().currentBuildSite];
             // are there any geysers available/visible?
             IEnumerable<Unit> geysers = Interface()
                 .GetGeysers().Where(geyser => geyser.getResources() > 0);
@@ -191,9 +192,10 @@ namespace POSH_StarCraftBot.behaviours
         [ExecutableAction("PositionSpwnPl")]
         public bool PositionSpwnPl()
         {
-            
+            if (!Interface().baseLocations.ContainsKey((int)Interface().currentBuildSite))
+                return false;
             // TODO: this needs to be changed to a better location around the base taking exits and resources into account
-            TilePosition buildPosition = buildPosition = Interface().baseLocations[(int)Interface().currentBuildSite];
+            TilePosition buildPosition = Interface().baseLocations[(int)Interface().currentBuildSite];
 
             builder = Interface().GetDrones().OrderBy(drone => drone.getDistance(new Position(buildPosition))).First();
             buildPosition = PossibleBuildLocation(GetBaseLocation(), 10, 0, 10, builder, bwapi.UnitTypes_Zerg_Spawning_Pool);
@@ -218,7 +220,8 @@ namespace POSH_StarCraftBot.behaviours
         [ExecutableAction("PositionHydraDen")]
         public bool PositionHydraDen()
         {
-
+            if (!Interface().baseLocations.ContainsKey((int)Interface().currentBuildSite))
+                return false;
             // TODO: this needs to be changed to a better location around the base taking exits and resources into account
             TilePosition buildPosition = Interface().baseLocations[(int)Interface().currentBuildSite];
 
@@ -243,6 +246,9 @@ namespace POSH_StarCraftBot.behaviours
         [ExecutableAction("PositionHatchery")]
         public bool PositionHatchery()
         {
+            if (!Interface().baseLocations.ContainsKey((int)Interface().currentBuildSite))
+                return false;
+
             TilePosition buildPosition = Interface().baseLocations[(int)Interface().currentBuildSite];
             buildPosition = PossibleBuildLocation(buildPosition, 10, 0, 10, builder, bwapi.UnitTypes_Zerg_Hatchery);
             builder = Interface().GetDrones().OrderBy(drone => drone.getDistance(new Position(buildPosition))).First();
@@ -263,7 +269,7 @@ namespace POSH_StarCraftBot.behaviours
         [ExecutableAction("UpgradeHatchery")]
         public bool UpgradeHatchery()
         {
-            if (!CanMorphUnit(bwapi.UnitTypes_Zerg_Lair))
+            if (!CanMorphUnit(bwapi.UnitTypes_Zerg_Lair) || !Interface().baseLocations.ContainsKey((int)Interface().currentBuildSite))
                 return false;
 
             return Interface().GetHatcheries()
@@ -274,6 +280,8 @@ namespace POSH_StarCraftBot.behaviours
         [ExecutableAction("PositionCreepColony")]
         public bool PositionCreepColony()
         {
+            if (!Interface().baseLocations.ContainsKey((int)Interface().currentBuildSite))
+                return false;
             TilePosition buildPosition = Interface().baseLocations[(int)Interface().currentBuildSite];
             buildPosition = PossibleBuildLocation(buildPosition, 10, 0, 50, builder, bwapi.UnitTypes_Zerg_Creep_Colony);
             builder = Interface().GetDrones().OrderBy(drone => drone.getDistance( new Position(buildPosition)) ).First();
@@ -294,7 +302,7 @@ namespace POSH_StarCraftBot.behaviours
         [ExecutableAction("UpgradeSunkenColony")]
         public bool UpgradeCreepColony()
         {
-            if (!CanMorphUnit(bwapi.UnitTypes_Zerg_Sunken_Colony))
+            if (!CanMorphUnit(bwapi.UnitTypes_Zerg_Sunken_Colony) || !Interface().baseLocations.ContainsKey((int)Interface().currentBuildSite))
                 return false;
 
             double dist = Interface().baseLocations[(int)Interface().currentBuildSite].getDistance(Interface().baseLocations[(int)BuildSite.StartingLocation]) / 3;
@@ -307,7 +315,7 @@ namespace POSH_StarCraftBot.behaviours
         [ExecutableAction("UpgradeSporeColony")]
         public bool UpgradeSporeColony()
         {
-            if (!CanMorphUnit(bwapi.UnitTypes_Zerg_Spore_Colony))
+            if (!CanMorphUnit(bwapi.UnitTypes_Zerg_Spore_Colony) || !Interface().baseLocations.ContainsKey((int)Interface().currentBuildSite))
                 return false;
 
             double dist = Interface().baseLocations[(int)Interface().currentBuildSite].getDistance(Interface().baseLocations[(int)BuildSite.StartingLocation]) / 3;
@@ -385,7 +393,7 @@ namespace POSH_StarCraftBot.behaviours
         [ExecutableSense("HaveNaturalHatchery")]
         public bool NaturalHatchery()
         {
-            TilePosition natural = Interface().baseLocations[(int)BuildSite.Natural];
+            TilePosition natural = Interface().baseLocations.ContainsKey((int)BuildSite.Natural) ? Interface().baseLocations[(int)BuildSite.Natural] : null;
             TilePosition start = Interface().baseLocations[(int)BuildSite.StartingLocation];
             
             // natural not known
@@ -409,9 +417,7 @@ namespace POSH_StarCraftBot.behaviours
         [ExecutableSense("BuildingDamaged")]
         public bool BuildingDamaged()
         {
-            TilePosition natural = Interface().baseLocations[(int)BuildSite.Natural];
-            TilePosition start = Interface().baseLocations[(int)BuildSite.StartingLocation];
-            double dist = natural.getDistance(start) / 3;
+
             IEnumerable<Unit> buildings = Interface().GetAllBuildings().Where(building => building.isCompleted() && building.getHitPoints() < building.getInitialHitPoints()).Where(building => building.getHitPoints() > 0);
 
             return (buildings.Count() > 0 );

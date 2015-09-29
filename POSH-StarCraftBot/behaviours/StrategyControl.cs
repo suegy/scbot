@@ -41,7 +41,7 @@ namespace POSH_StarCraftBot.behaviours
         //
         private bool SwitchBuildToBase(int location)
         {
-            if (Interface().baseLocations[location] is TilePosition)
+            if (Interface().baseLocations.ContainsKey(location) && Interface().baseLocations[location] is TilePosition)
             {
                 Interface().currentBuildSite = (BuildSite)location;
                 return true;
@@ -155,19 +155,19 @@ namespace POSH_StarCraftBot.behaviours
         [ExecutableAction("OverLordToNatural")]
         public bool OverLordToNatural()
         {
-            if (Interface().baseLocations[(int)BuildSite.Natural] is TilePosition || (scout is Unit && scout.getHitPoints() > 0 && scout.isMoving()))
+            if ( Interface().baseLocations.ContainsKey((int)BuildSite.Natural)  || (scout is Unit && scout.getHitPoints() > 0 && scout.isMoving()))
                 return false;
             TilePosition startLoc = Interface().baseLocations[(int)BuildSite.StartingLocation];
 
             if (scout == null || scout.getHitPoints() == 0)
                 scout = Interface().GetOverlord().Where(ol => !ol.isMoving()).OrderByDescending(ol => ol.getTilePosition().getDistance(startLoc)).First();
-
             BaseLocation[] pos = bwta.getBaseLocations().Where(baseLoc => bwta.getGroundDistance(startLoc, baseLoc.getTilePosition()) > 0).OrderBy(baseLoc => bwta.getGroundDistance(startLoc, baseLoc.getTilePosition())).ToArray();
 
             for (int i = 0; i < pos.Length; i++)
                 Console.Out.WriteLine("loc" + i + " " + bwta.getGroundDistance(pos[i].getTilePosition(), startLoc) + " " + pos[i].getTilePosition().getDistance(startLoc));
-
-            scout.rightClick(new Position(pos[0].getTilePosition()));
+            if (pos.Length < 1)
+                return false; 
+            scout.rightClick(pos[0].getPosition());
 
             return true;
         }
@@ -214,11 +214,11 @@ namespace POSH_StarCraftBot.behaviours
                     droneScout.move(new Position(Interface().baseLocations[(int)BuildSite.StartingLocation]));
                 return false;
             }
-            if (droneScout.getTilePosition().getDistance(
+            if (droneScout.getPosition().getDistance(
                 bwta.getBaseLocations().OrderBy(loc =>
                     loc.getTilePosition().getDistance(Interface().baseLocations[(int)BuildSite.StartingLocation]))
                     .ElementAt(scoutCounter)
-                    .getTilePosition()
+                    .getPosition()
                     ) < DELTADISTANCE)
             {
                 // close to another base location 
@@ -251,7 +251,7 @@ namespace POSH_StarCraftBot.behaviours
             TilePosition targetChoke = null;
             Chokepoint chokepoint = null;
 
-            if (site != BuildSite.StartingLocation)
+            if (site != BuildSite.StartingLocation && Interface().baseLocations.ContainsKey((int)site))
             {
                 targetChoke = Interface().baseLocations[(int)site];
                 double distance = start.getDistance(targetChoke);
@@ -323,8 +323,9 @@ namespace POSH_StarCraftBot.behaviours
         [ExecutableSense("NeedOverlordAtNatural")]
         public bool NeedOverlordAtNatural()
         {
-            if (scout == null || scout.getHitPoints() == 0 || !scout.isMoving() && !reachedBaseLocation)
+            if (scout == null || scout.getHitPoints() == 0 || ( !scout.isMoving() && !reachedBaseLocation) || !Interface().baseLocations.ContainsKey((int)BuildSite.Natural))
                 return true;
+            
             TilePosition startLoc = Interface().baseLocations[(int)BuildSite.StartingLocation];
             BaseLocation[] pos = bwta.getBaseLocations().Where(
                 baseLoc => bwta.getGroundDistance(startLoc, baseLoc.getTilePosition()) > 0 &&
@@ -333,7 +334,7 @@ namespace POSH_StarCraftBot.behaviours
                 )
                 .OrderBy(baseLoc => bwta.getGroundDistance(startLoc, baseLoc.getTilePosition())).ToArray();
 
-            if (scout.getTilePosition().getDistance(pos[0].getTilePosition()) < DELTADISTANCE && !reachedBaseLocation)
+            if (scout.getDistance(pos[0].getPosition()) < DELTADISTANCE && !reachedBaseLocation)
             {
                 Interface().baseLocations[(int)BuildSite.Natural] = pos[0].getTilePosition();
                 reachedBaseLocation = true;
