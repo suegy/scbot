@@ -108,6 +108,9 @@ namespace POSH_StarCraftBot
             System.Console.WriteLine("Connecting...");
             reconnect();
 
+            //TODO: remove the match speed
+            bwapi.Broodwar.setLocalSpeed(0);
+            
             //wait for game to start
             System.Console.WriteLine("waiting to enter match\n");
             while (!bwapi.Broodwar.isInGame())
@@ -131,8 +134,7 @@ namespace POSH_StarCraftBot
                     switch (et)
                     {
                         case EventType_Enum.MatchStart:
-                            // initializing additional functionality provided by BWTA
-                            bwta.readMap();
+
                             // takes a long time to run
                             bwtaThread.Start();
                             foreach (BWAPI.IStarcraftBot client in clients.Values)
@@ -143,10 +145,6 @@ namespace POSH_StarCraftBot
                         case EventType_Enum.MatchEnd:
                             foreach (BWAPI.IStarcraftBot client in clients.Values)
                                 client.onEnd(e.isWinner());
-                            break;
-                        case EventType_Enum.MatchFrame:
-                            foreach (BWAPI.IStarcraftBot client in clients.Values)
-                                client.onFrame();
                             break;
                         default:
                             break;
@@ -172,13 +170,6 @@ namespace POSH_StarCraftBot
                     EventType_Enum et = e.getType();
                     switch (et)
                     {
-                        case EventType_Enum.MatchStart:
-                            // initializing additional functionality provided by BWTA
-                            bwta.readMap();
-                            
-                            foreach (BWAPI.IStarcraftBot client in clients.Values)
-                                client.onStart();
-                            break;
                         case EventType_Enum.MatchEnd:
                             foreach (BWAPI.IStarcraftBot client in clients.Values)
                                 client.onEnd(e.isWinner());
@@ -245,6 +236,7 @@ namespace POSH_StarCraftBot
                             break;
                     }
                 }
+                System.Threading.Thread.Sleep(50);
                 bwapiclient.BWAPIClient.update();
                 if (!bwapiclient.BWAPIClient.isConnected())
                 {
@@ -300,7 +292,9 @@ namespace POSH_StarCraftBot
         }
 
         public void RunBWTA() 
-        { 
+        {
+            // initializing additional functionality provided by BWTA
+            bwta.readMap();
             bwta.analyze();
         }
     }

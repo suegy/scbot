@@ -17,7 +17,7 @@ namespace POSH_StarCraftBot.behaviours
 
         public enum Races { Unknown = 0, Zerg = 1, Protoss = 2, Terran = 3 }
 
-        protected const double DELTADISTANCE = 10L;
+        protected const double DELTADISTANCE = 100L;
 
         protected const double DELTATIME = 100L;
 
@@ -39,6 +39,21 @@ namespace POSH_StarCraftBot.behaviours
             return ((BODStarCraftBot)IBWAPI);
         }
 
+        protected internal bool move(Position target, Unit unit, int timeout = 10)
+        {
+            bool executed = false;
+            if (unit.getDistance(target) < DELTADISTANCE)
+                return false;
+            while (!unit.getTargetPosition().opEquals(target) && !unit.isMoving() && timeout-- > 0)
+            {
+                executed = unit.move(target, false);
+                if (_debug_)
+                    Console.Out.WriteLine("unit "+unit.getID()+" to target: " + executed);
+                System.Threading.Thread.Sleep(10);
+            }
+            return executed;
+        }
+
         protected UnitControl UnitManager()
         {
             return (UnitControl)agent.getBehaviour("UnitControl");
@@ -48,9 +63,12 @@ namespace POSH_StarCraftBot.behaviours
         {
             if (unit.gasPrice() <= Interface().GasCount() &&
                 unit.mineralPrice() <= Interface().MineralCount() &&
-                unit.supplyRequired() <= Interface().AvailableSupply() &&
-                Interface().LarvaeCount() > 0)
-                return true;
+                unit.supplyRequired() <= Interface().AvailableSupply()
+                )
+                if (unit.isBuilding())
+                    return true;
+                else if (Interface().LarvaeCount() > 0 )
+                    return true;
 
             return false;
         }

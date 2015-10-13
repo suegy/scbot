@@ -94,7 +94,7 @@ namespace POSH_StarCraftBot.behaviours
         [ExecutableSense("NaturalFound")]
         public bool NaturalFound()
         {
-            return (Interface().baseLocations[(int)BuildSite.Natural] is TilePosition);
+            return (Interface().baseLocations.ContainsKey((int)BuildSite.Natural) && Interface().baseLocations[(int)BuildSite.Natural] is TilePosition);
         }
 
         [ExecutableSense("HaveHydraSpeed")]

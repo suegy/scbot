@@ -14,13 +14,13 @@ namespace POSH_StarCraftBot.behaviours
     {
 
         TilePosition buildLocation;
-        Dictionary<int,Unit> destroyedBuildings;
+        Dictionary<int, Unit> destroyedBuildings;
         Unit buildingToRepair;
         Unit repairDrone;
         Unit builder;
 
-        private bool needBuilding  = true;
-        
+        private bool needBuilding = true;
+
         /// <summary>
         /// contains the current location and build queue 
         /// </summary>
@@ -33,9 +33,9 @@ namespace POSH_StarCraftBot.behaviours
         Dictionary<Unit, TilePosition> buildingInProgress;
 
         public BuildingControl(AgentBase agent)
-            : base(agent, 
-            new string[] {},
-            new string[] {})
+            : base(agent,
+            new string[] { },
+            new string[] { })
         {
             buildQueue = new Dictionary<int, Dictionary<Unit, TilePosition>>();
             buildingInProgress = new Dictionary<Unit, TilePosition>();
@@ -54,36 +54,53 @@ namespace POSH_StarCraftBot.behaviours
 
             return baseLoc;
         }
+
         private TilePosition PossibleBuildLocation(TilePosition start, int xSpace, int ySpace, int iterations, Unit builder, UnitType building)
         {
-            const int xSpread = 10;
-            const int ySpread = 10;
-
-            TilePosition[] directions = new TilePosition[] {
-                new TilePosition(xSpace,ySpace), new TilePosition(xSpread*xSpace,0), new TilePosition(-xSpread*xSpace,0),
-                new TilePosition(xSpread*xSpace,ySpread*ySpace),new TilePosition(xSpread*xSpace,-ySpread*ySpace),
-                new TilePosition(-xSpread*xSpace,ySpread*ySpace),new TilePosition(-xSpread*xSpace,-ySpread*ySpace),
-                new TilePosition(0,ySpread*ySpace),new TilePosition(0,-ySpread*ySpace) };
+            List<Position> directions = new List<Position>()
+            {
+                new Position(0,0),
+            /*  new TilePosition(xSpace,0), new TilePosition(xSpace,-ySpace),
+                new TilePosition(0,-ySpace),new TilePosition(-xSpace,-ySpace),
+                new TilePosition(-xSpace,0),new TilePosition(-xSpace,ySpace),
+                new TilePosition(0,ySpace), new TilePosition(xSpace,ySpace) */
+             };
             if (iterations < 0)
                 return null;
-
-            
-            foreach (TilePosition pos in directions)
+            for (int x = -xSpace; x <= xSpace; x++)
             {
-                if (bwapi.Broodwar.canBuildHere(this.builder, start.opAdd(pos), bwapi.UnitTypes_Zerg_Spawning_Pool))
-                    return start.opAdd(pos);
+                directions.Add(new Position(x, ySpace));
+                directions.Add(new Position(x, -ySpace));
+            }
+            for (int y = -ySpace; y <= ySpace; y++)
+            {
+                directions.Add(new Position(xSpace, y));
+                directions.Add(new Position(-xSpace, y));
             }
 
-            return PossibleBuildLocation(start, xSpace++, ySpace++, iterations--, builder, building);
+
+            foreach (Position pos in directions)
+            {
+                if (bwapi.Broodwar.canBuildHere(builder, start.opAdd(new TilePosition(pos)), building))
+                {
+                    
+                   // if (_debug_)
+                    //    Console.Out.WriteLine(building.getID() + " building here: " + start.opAdd(pos).xConst() + " " + start.opAdd(pos).yConst());
+                    return start.opAdd(new TilePosition(pos));
+                }
+            }
+
+            return PossibleBuildLocation(start, ++xSpace, ++ySpace, --iterations, builder, building);
         }
 
         protected int CountUnbuiltBuildings(UnitType type)
         {
             int count = 0;
-            if (!buildQueue.ContainsKey(type.getID()) || !(buildQueue[type.getID()] is Dictionary<Unit,TilePosition>))
+            if (!buildQueue.ContainsKey(type.getID()) || !(buildQueue[type.getID()] is Dictionary<Unit, TilePosition>))
                 return count;
-
-            foreach (Unit unit in buildQueue[type.getID()].Keys)
+            
+            Unit[] units = buildQueue[type.getID()].Keys.ToArray();
+            foreach (Unit unit in units)
             {
                 if (unit.isBeingConstructed() || (unit.isConstructing() && unit.getTargetPosition().opEquals(new Position(buildQueue[type.getID()][unit]))))
                 {
@@ -102,33 +119,42 @@ namespace POSH_StarCraftBot.behaviours
 
         protected int CountBuildingsinProgress(UnitType type)
         {
-            foreach (Unit unit in buildingInProgress.Keys)
-            {
-                if (unit.getHitPoints() == 0 || unit.isCompleted())
+            Unit[] units = buildingInProgress.Keys.ToArray();
+                foreach (Unit unit in units)
                 {
-                    buildingInProgress.Remove(unit);
-                }
+                    if (unit.getHitPoints() == 0 || unit.isCompleted())
+                    {
+                        buildingInProgress.Remove(unit);
+                    }
 
-            }
+                }
 
             return buildingInProgress.Where(pair => pair.Key.getType().getID() == type.getID()).Count();
         }
 
-        protected bool Build(UnitType type)
+        protected bool Build(UnitType type, int timeout = 10)
         {
-
-            if (CanMorphUnit(type) && builder is Unit && !builder.isConstructing() && !builder.isBeingConstructed())
+            bool building = false;
+            if (buildLocation is TilePosition && CanMorphUnit(type) && builder is Unit && !builder.isConstructing() && !builder.isBeingConstructed())
             {
-                if (!(buildQueue[type.getID()] is Dictionary<Unit, TilePosition>))
+                if (!buildQueue.ContainsKey(type.getID()) || !(buildQueue[type.getID()] is Dictionary<Unit, TilePosition>))
                     buildQueue[type.getID()] = new Dictionary<Unit, TilePosition>();
 
-                if (buildQueue[type.getID()].ContainsKey(builder))
+                if (buildQueue[type.getID()].ContainsKey(builder) && builder.isConstructing())
                     return true;
-                bool building = builder.build(buildLocation, type);
+                foreach (int uType in buildQueue.Keys)
+                    if (buildQueue[uType].ContainsKey(builder))
+                        return false;
+
+                while (!builder.isConstructing() && builder.getHitPoints() > 0 && timeout-- > 0)
+                {
+                    building = builder.build(buildLocation, type);
+                    System.Threading.Thread.Sleep(50);
+                }
                 if (building)
                     buildQueue[type.getID()][builder] = buildLocation;
-                
-                
+
+
                 return building;
 
             }
@@ -152,7 +178,7 @@ namespace POSH_StarCraftBot.behaviours
             if (geysers.Count() < 1)
                 return false;
 
-            
+
             // sort by closest path for ground units from selected build base
             TilePosition closest = geysers
                 .OrderBy(geyser => geyser.getDistance(new Position(buildPosition)))
@@ -162,11 +188,11 @@ namespace POSH_StarCraftBot.behaviours
             if (closest is TilePosition)
             {
                 this.buildLocation = closest;
-                builder.move(new Position(closest));
-                if (builder.getDistance(new Position(closest)) < DELTADISTANCE)
-                    return true;
-
-                return false;
+                builder = Interface().GetBuilder(buildPosition);
+                //move(new Position(closest), builder);
+                // if (builder.getDistance(new Position(closest)) < DELTADISTANCE)
+                //     return true;
+                return true;
             }
 
             return false;
@@ -196,14 +222,16 @@ namespace POSH_StarCraftBot.behaviours
                 return false;
             // TODO: this needs to be changed to a better location around the base taking exits and resources into account
             TilePosition buildPosition = Interface().baseLocations[(int)Interface().currentBuildSite];
+            builder = Interface().GetBuilder(buildPosition); 
+            
+            buildPosition = PossibleBuildLocation(buildPosition, 1, 1, 100, builder, bwapi.UnitTypes_Zerg_Spawning_Pool);
+            buildLocation = buildPosition;
 
-            builder = Interface().GetDrones().OrderBy(drone => drone.getDistance(new Position(buildPosition))).First();
-            buildPosition = PossibleBuildLocation(GetBaseLocation(), 10, 0, 10, builder, bwapi.UnitTypes_Zerg_Spawning_Pool);
-            this.buildLocation = buildPosition;
-            builder.move(new Position(buildPosition));
-            if (builder.getDistance(new Position(buildPosition)) < DELTADISTANCE)
+            if (buildPosition is TilePosition)
+            {
+                move(new Position(buildPosition), builder);
                 return true;
-
+            }
             return false;
         }
 
@@ -224,14 +252,15 @@ namespace POSH_StarCraftBot.behaviours
                 return false;
             // TODO: this needs to be changed to a better location around the base taking exits and resources into account
             TilePosition buildPosition = Interface().baseLocations[(int)Interface().currentBuildSite];
-
-            builder = Interface().GetDrones().OrderBy(drone => drone.getDistance(new Position(buildPosition))).First();
-            buildPosition = PossibleBuildLocation(GetBaseLocation(), 10, 0, 10, builder, bwapi.UnitTypes_Zerg_Hydralisk_Den);
-            builder = Interface().GetDrones().OrderBy(drone => drone.getDistance(new Position(buildPosition))).First();
-            this.buildLocation = buildPosition;
-            builder.move(new Position(buildPosition));
-            if (builder.getDistance(new Position(buildPosition)) < DELTADISTANCE)
+            builder = Interface().GetBuilder(buildPosition);
+            
+            buildPosition = PossibleBuildLocation(buildPosition, 1, 1, 200, builder, bwapi.UnitTypes_Zerg_Hydralisk_Den);
+            buildLocation = buildPosition;
+            if (buildPosition is TilePosition)
+            {
+                move(new Position(buildPosition), builder);
                 return true;
+            }
 
             return false;
         }
@@ -250,14 +279,17 @@ namespace POSH_StarCraftBot.behaviours
                 return false;
 
             TilePosition buildPosition = Interface().baseLocations[(int)Interface().currentBuildSite];
-            buildPosition = PossibleBuildLocation(buildPosition, 10, 0, 10, builder, bwapi.UnitTypes_Zerg_Hatchery);
-            builder = Interface().GetDrones().OrderBy(drone => drone.getDistance(new Position(buildPosition))).First();
-
-            builder.rightClick(new Position(buildPosition));
-            if (builder.getDistance(new Position(buildPosition)) < DELTADISTANCE )
-                return true;
+            builder = Interface().GetBuilder(buildPosition);
+            buildPosition = PossibleBuildLocation(buildPosition, 1, 1, 100, builder, bwapi.UnitTypes_Zerg_Hatchery);
             
-            return false;
+            buildLocation = buildPosition;
+
+            move(new Position(buildPosition), builder);
+
+            // if (builder.getDistance(new Position(buildPosition)) < DELTADISTANCE )
+            //     return true;
+
+            return true;
         }
 
         [ExecutableAction("BuildHatchery")]
@@ -274,7 +306,7 @@ namespace POSH_StarCraftBot.behaviours
 
             return Interface().GetHatcheries()
                 .OrderBy(hatch => Interface().baseLocations[(int)Interface().currentBuildSite].getDistance(hatch.getTilePosition()))
-                .ElementAt(0).morph(bwapi.UnitTypes_Zerg_Lair);
+                .First().morph(bwapi.UnitTypes_Zerg_Lair);
         }
 
         [ExecutableAction("PositionCreepColony")]
@@ -283,11 +315,13 @@ namespace POSH_StarCraftBot.behaviours
             if (!Interface().baseLocations.ContainsKey((int)Interface().currentBuildSite))
                 return false;
             TilePosition buildPosition = Interface().baseLocations[(int)Interface().currentBuildSite];
-            buildPosition = PossibleBuildLocation(buildPosition, 10, 0, 50, builder, bwapi.UnitTypes_Zerg_Creep_Colony);
-            builder = Interface().GetDrones().OrderBy(drone => drone.getDistance( new Position(buildPosition)) ).First();
+            builder = Interface().GetBuilder(buildPosition);
+            buildPosition = PossibleBuildLocation(buildPosition, 1, 1, 200, builder, bwapi.UnitTypes_Zerg_Creep_Colony);
             
-            builder.rightClick(new Position(buildPosition));
-            if (builder.getDistance(new Position(buildPosition)) < DELTADISTANCE )
+            buildLocation = buildPosition;
+
+            move(new Position(buildPosition), builder);
+            if (builder.getDistance(new Position(buildPosition)) < DELTADISTANCE)
                 return true;
 
             return false;
@@ -330,8 +364,8 @@ namespace POSH_StarCraftBot.behaviours
         {
             if (repairDrone == null || repairDrone.getHitPoints() <= 0 || buildingToRepair == null || buildingToRepair.getHitPoints() <= 0)
                 return false;
-
-            return repairDrone.repair(buildingToRepair);
+            move(buildingToRepair.getPosition(), repairDrone);
+            return repairDrone.repair(buildingToRepair, true);
         }
 
 
@@ -357,7 +391,12 @@ namespace POSH_StarCraftBot.behaviours
         {
             return Interface().GetHatcheries().Count() + CountBuildingsinProgress(bwapi.UnitTypes_Zerg_Hatchery) + CountUnbuiltBuildings(bwapi.UnitTypes_Zerg_Hatchery);
         }
-
+        
+        [ExecutableSense("SpawnPoolCount")]
+        public int SpawnPoolCount()
+        {
+            return Interface().GetSpawningPools().Count() + CountBuildingsinProgress(bwapi.UnitTypes_Zerg_Spawning_Pool) + CountUnbuiltBuildings(bwapi.UnitTypes_Zerg_Spawning_Pool);
+        }
         [ExecutableSense("ExtractorCount")]
         public int ExtractorCount()
         {
@@ -368,6 +407,12 @@ namespace POSH_StarCraftBot.behaviours
         public int HydraDenCount()
         {
             return Interface().GetHydraDens().Count() + CountBuildingsinProgress(bwapi.UnitTypes_Zerg_Hydralisk_Den) + CountUnbuiltBuildings(bwapi.UnitTypes_Zerg_Hydralisk_Den);
+        }
+
+        [ExecutableSense("LairCount")]
+        public int LairCount()
+        {
+            return Interface().GetLairs().Count() + CountBuildingsinProgress(bwapi.UnitTypes_Zerg_Lair) + CountUnbuiltBuildings(bwapi.UnitTypes_Zerg_Lair);
         }
 
         [ExecutableSense("SunkenColonyCount")]
@@ -387,7 +432,7 @@ namespace POSH_StarCraftBot.behaviours
         {
             builder = UnitManager().GetDrone();
 
-            return (builder == null) ? true : false;
+            return (builder is Unit) ? true : false;
         }
 
         [ExecutableSense("HaveNaturalHatchery")]
@@ -395,22 +440,22 @@ namespace POSH_StarCraftBot.behaviours
         {
             TilePosition natural = Interface().baseLocations.ContainsKey((int)BuildSite.Natural) ? Interface().baseLocations[(int)BuildSite.Natural] : null;
             TilePosition start = Interface().baseLocations[(int)BuildSite.StartingLocation];
-            
+
             // natural not known
             if (natural == null)
                 return false;
 
             // arbitratry distance measure to determine if the hatchery is closer to the natural or the starting location
-            double dist = natural.getDistance(start) / 3;
+            double dist = new Position(natural).getDistance(new Position(start)) / 3;
 
-            if (Interface().GetHatcheries().Where(hatch=> hatch.getDistance(new Position(natural)) < dist).Count() >0)
+            if (Interface().GetHatcheries().Where(hatch => hatch.getDistance(new Position(natural)) < dist).Count() > 0)
                 return true;
-            
+
             foreach (Unit unit in this.buildingInProgress.Keys)
-                if (unit.getType().getID() ==  bwapi.UnitTypes_Zerg_Hatchery.getID() &&
-                    unit.getDistance(new Position(natural)) < dist )
+                if (unit.getType().getID() == bwapi.UnitTypes_Zerg_Hatchery.getID() &&
+                    unit.getDistance(new Position(natural)) < dist)
                     return true;
-            
+
             return false;
         }
 
@@ -418,26 +463,34 @@ namespace POSH_StarCraftBot.behaviours
         public bool BuildingDamaged()
         {
 
-            IEnumerable<Unit> buildings = Interface().GetAllBuildings().Where(building => building.isCompleted() && building.getHitPoints() < building.getInitialHitPoints()).Where(building => building.getHitPoints() > 0);
-
-            return (buildings.Count() > 0 );
+            IEnumerable<Unit> buildings = Interface().GetAllBuildings().Where(building => building.isCompleted() && building.getHitPoints() < building.getType().maxHitPoints()).Where(building => building.getHitPoints() > 0);
+            
+            return (buildings.Count() > 0);
         }
 
         [ExecutableSense("FindDamagedBuilding")]
         public bool FindDamagedBuilding()
         {
-            IEnumerable<Unit> buildings = Interface().GetAllBuildings().Where(building => building.isCompleted() && building.getHitPoints() < building.getInitialHitPoints())
-                .Where(building => building.getHitPoints() > 0 )
+            IEnumerable<Unit> buildings = Interface().GetAllBuildings().Where(building => building.isCompleted() && building.getHitPoints() < building.getType().maxHitPoints())
+                .Where(building => building.getHitPoints() > 0)
                 .OrderBy(building => building.getHitPoints());
+            
+            // nothing to repair so reset memory and continue
+            if (buildings.Count() < 1)
+            {
+                repairDrone = null;
+                buildingToRepair = null;
+                return false;
+            }
             if (repairDrone == null || repairDrone.getHitPoints() <= 0)
-                repairDrone = Interface().GetDrones().Where(drone => drone.getHitPoints() > 0).OrderBy( drone => drone.getDistance(buildings.First())).First();
+                repairDrone = Interface().GetDrones().Where(drone => drone.getHitPoints() > 0).OrderBy(drone => drone.getDistance(buildings.First())).First();
 
-            if (buildingToRepair == null || buildingToRepair.getHitPoints() <= 0)
+            if (buildingToRepair == null || buildingToRepair.getHitPoints() <= 0 )
                 buildingToRepair = buildings.First();
 
             return (repairDrone is Unit && buildingToRepair is Unit);
         }
 
-        
+
     }
 }

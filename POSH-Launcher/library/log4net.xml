@@ -8,10 +8,12 @@
     <!-- which makes it suitable for monitoring single game sessions. -->
     <!-- It also does not append to file and instead empties the file -->
     <!-- each game session, so you always "start fresh".              -->
-    <appender name="FileAppender" type="log4net.Appender.FileAppender">
+    <appender name="RollingFileAppender" type="log4net.Appender.RollingFileAppender">
         <!-- TODO: Change file path according to your setup! -->
         <file value="./current.log" />
-        <appendToFile value="false" />
+        <appendToFile value="true" /><rollingStyle value="Date" />
+        <datePattern value="yyyyMMdd" />
+		<maximumFileSize value="500MB" />
         <layout type="log4net.Layout.PatternLayout">
             <conversionPattern value="[%6rms] %-5level %-10logger - %message%newline" />
         </layout>

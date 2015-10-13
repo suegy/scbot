@@ -25,7 +25,7 @@ namespace POSH_StarCraftBot.logic
         protected internal UnitAgent(Unit myUnit, UnitAgentOptimizedProperties opProp,CombatControl control)
         {
             SCUnit = myUnit;
-            this.log = control.log;
+            this.log = (control is CombatControl) ? control.log : null;
             this.control = control;
             OptimizedProperties = opProp;
             LeadingStatus = LeadingStatusEnum.None;

@@ -11,14 +11,14 @@ using POSH_StarCraftBot.logic;
 
 namespace POSH_StarCraftBot
 {
-    public enum BuildSite { Error = -1, None = 0, StartingLocation = 1, Natural = 2, Extension = 3 };
-    public enum ForceLocations { NotAssigned = 0, OwnStart = 1, Natural = 2, Extension = 3, NaturalChoke = 4, EnemyNatural = 5, EnemyStart = 6, ArmyOne = 7, ArmyTwo = 8 };
+    public enum BuildSite { None = 0, StartingLocation = 1, Natural = 2, Extension = 3 };
+    public enum ForceLocations { NotAssigned = 0, OwnStart = 1, Natural = 2, Extension = 3, NaturalChoke = 4, EnemyNatural = 5, EnemyStart = 6, ArmyOne = 7, ArmyTwo = 8, Build = 9, Scout = 10 };
     public enum GamePhase { Early, Mid, End }
-    
+
     public class BODStarCraftBot : IStarcraftBot
     {
 
-        protected internal Dictionary<string,Player> ActivePlayers { get; private set; }
+        protected internal Dictionary<string, Player> ActivePlayers { get; private set; }
         protected internal Dictionary<long, Unit> UnitDiscovered { get; private set; }
         protected internal Dictionary<long, Unit> UnitEvade { get; private set; }
 
@@ -32,7 +32,7 @@ namespace POSH_StarCraftBot
 
         private int[] mapDim;
         protected log4net.ILog LOG;
-        
+
         protected internal POSH_StarCraftBot.behaviours.AStarCraftBehaviour.Races enemyRace { get; set; }
 
         /// <summary>
@@ -51,9 +51,9 @@ namespace POSH_StarCraftBot
         /// <summary>
         /// The base locations used within the game. "0" is starting location, "1" is natural, "2" is first Extension
         /// </summary>
-        public Dictionary<int,TilePosition> baseLocations { get; set; }
+        public Dictionary<int, TilePosition> baseLocations { get; set; }
 
-        
+
 
         /// <summary>
         /// The base we want to build at. "O" means starting base, "1" is natural "2" is first Extension "-1" is error state.
@@ -73,7 +73,7 @@ namespace POSH_StarCraftBot
             System.Console.WriteLine("Starting Match!");
             bwapi.Broodwar.sendText("Hello world! This is POSH!");
             mapDim = new int[2];
-            ActivePlayers = new Dictionary<string,Player>();
+            ActivePlayers = new Dictionary<string, Player>();
             UnitDiscovered = new Dictionary<long, Unit>();
             UnitEvade = new Dictionary<long, Unit>();
             UnitShow = new Dictionary<long, Unit>();
@@ -84,18 +84,18 @@ namespace POSH_StarCraftBot
             UnitMorphed = new Dictionary<long, Unit>();
             UnitRenegade = new Dictionary<long, Unit>();
 
-            baseLocations = new Dictionary<int,TilePosition>();
+            baseLocations = new Dictionary<int, TilePosition>();
             currentBuildSite = BuildSite.StartingLocation;
 
             foreach (Player pl in bwapi.Broodwar.getPlayers())
-                ActivePlayers.Add(pl.getName(),pl);
+                ActivePlayers.Add(pl.getName(), pl);
             if (ActivePlayers.ContainsKey(Self().getName()))
                 ActivePlayers.Remove(Self().getName());
 
             forces = new Dictionary<ForceLocations, List<UnitAgent>>();
             forcePoints = new Dictionary<ForceLocations, TilePosition>();
 
-                // initiating the starting location
+            // initiating the starting location
             if (Self().getStartLocation() is TilePosition)
             {
                 baseLocations[(int)BuildSite.StartingLocation] = Self().getStartLocation();
@@ -181,9 +181,33 @@ namespace POSH_StarCraftBot
         //
         //
 
+        protected internal Unit GetBuilder(TilePosition location)
+        {
+            if (!forces.ContainsKey(ForceLocations.Build) || !(forces[ForceLocations.Build] is List<UnitAgent>))
+            {
+                forces[ForceLocations.Build] = new List<UnitAgent>();
+            }
+            else
+            {
+                forces[ForceLocations.Build].RemoveAll(unit => unit.SCUnit.getBuildType().isBuilding() || unit.SCUnit.isMorphing()|| unit.SCUnit.getHitPoints() <= 0);
+            }
+            if (forces[ForceLocations.Build].Count > 0)
+                return forces[ForceLocations.Build].OrderBy(unit => unit.SCUnit.getDistance(new Position(location))).First().SCUnit;
+
+            Unit builder = GetDrones().Where(drone=> !IsBuilder(drone)).OrderBy(drone => drone.getDistance(new Position(location))).First();
+
+            if (!(builder is Unit))
+                return null;
+            forces[ForceLocations.Build].Add(new UnitAgent(builder, null, null));
+            return builder;
+
+        }
+
+
         public int LarvaeCount()
         {
-            return bwapi.Broodwar.self().allUnitCount(bwapi.UnitTypes_Zerg_Larva);
+            int total = bwapi.Broodwar.self().allUnitCount(bwapi.UnitTypes_Zerg_Larva);
+            return (total > 0) ? bwapi.Broodwar.self().allUnitCount(bwapi.UnitTypes_Zerg_Larva) - GetLarvae().Where(larvae => larvae.isMorphing()).Count() : 0;
         }
 
         public int DroneCount()
@@ -237,7 +261,17 @@ namespace POSH_StarCraftBot
 
         public IEnumerable<Unit> GetIdleDrones()
         {
-            return bwapi.Broodwar.self().getUnits().Where(unit => unit.getType().getID() == bwapi.UnitTypes_Zerg_Drone.getID()).Where(drone => drone.isIdle());
+            return bwapi.Broodwar.self().getUnits().Where(unit => unit.getType().getID() == bwapi.UnitTypes_Zerg_Drone.getID()).Where(drone => drone.isIdle() && !IsBuilder(drone));
+        }
+
+        protected internal bool IsBuilder(Unit drone)
+        {
+            if (!forces.ContainsKey(ForceLocations.Build) || !(forces[ForceLocations.Build] is List<UnitAgent>))
+                return false;
+
+            forces[ForceLocations.Build].RemoveAll(unit => unit.SCUnit.getBuildType().isBuilding() || unit.SCUnit.getHitPoints() <= 0);
+            return (forces[ForceLocations.Build].Where(unit => unit.SCUnit.getID() == drone.getID()).Count() > 0) ? true : false;
+
         }
 
         public IEnumerable<Unit> GetZerglings(int amount)
@@ -273,7 +307,7 @@ namespace POSH_StarCraftBot
         public IEnumerable<Unit> GetAllUnits(bool worker)
         {
             return bwapi.Broodwar.self().getUnits().Where(unit =>
-                !unit.getType().isBuilding() && 
+                !unit.getType().isBuilding() &&
                 (worker) ? unit.getType().isWorker() : !unit.getType().isWorker()
                 );
         }
@@ -288,6 +322,11 @@ namespace POSH_StarCraftBot
         public IEnumerable<Unit> GetHatcheries()
         {
             return bwapi.Broodwar.self().getUnits().Where(unit => unit.getType().getID() == bwapi.UnitTypes_Zerg_Hatchery.getID());
+        }
+
+        public IEnumerable<Unit> GetSpawningPools()
+        {
+            return bwapi.Broodwar.self().getUnits().Where(unit => unit.getType().getID() == bwapi.UnitTypes_Zerg_Spawning_Pool.getID());
         }
 
         public IEnumerable<Unit> GetLairs()
@@ -453,5 +492,7 @@ namespace POSH_StarCraftBot
         {
             //throw new NotImplementedException();
         }
+
+
     }
 }

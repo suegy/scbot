@@ -189,7 +189,8 @@ namespace POSH_StarCraftBot.behaviours
 
         void UpdateUnits()
         {
-            Interface().forces[currentForce].RemoveAll(unit => unit.SCUnit.getHitPoints() <= 0);
+            if (Interface().forces.ContainsKey(currentForce) && Interface().forces[currentForce] is List<UnitAgent>)
+                Interface().forces[currentForce].RemoveAll(unit => unit.SCUnit.getHitPoints() <= 0);
         }
 
         protected bool AttackLocation(ForceLocations location)
@@ -226,7 +227,7 @@ namespace POSH_StarCraftBot.behaviours
         [ExecutableAction("RetreatForce")]
         public bool RetreatForce()
         {
-            if (Interface().forces.ContainsKey(currentForce))
+            if (!Interface().forces.ContainsKey(currentForce))
                 return false;
 
             ForceLocations loc = ForceLocations.NaturalChoke;
@@ -234,16 +235,16 @@ namespace POSH_StarCraftBot.behaviours
 
             if (!Interface().forcePoints.ContainsKey(loc))
                 loc = ForceLocations.OwnStart;
-
+            
             Interface().forces[currentForce].Where(unit => unit.SCUnit.move(new Position(Interface().forcePoints[loc]), true));
 
-            foreach (UnitAgent unit in Interface().forces[currentForce].Where(unit => unit.SCUnit.getTargetPosition().getDistance(new Position(Interface().forcePoints[loc])) < DELTADISTANCE))
-            {
-                Interface().forces[loc].Add(unit);
-            }
+                foreach (UnitAgent unit in Interface().forces[currentForce].Where(unit => unit.SCUnit.getTargetPosition().getDistance(new Position(Interface().forcePoints[loc])) < DELTADISTANCE))
+                {
+                    Interface().forces[loc].Add(unit);
+                }
 
-            Interface().forces[currentForce].RemoveAll(unit => unit.SCUnit.getTargetPosition().getDistance(new Position(Interface().forcePoints[loc])) < DELTADISTANCE);
-
+                Interface().forces[currentForce].RemoveAll(unit => unit.SCUnit.getTargetPosition().getDistance(new Position(Interface().forcePoints[loc])) < DELTADISTANCE);
+            
             return true;
         }
 
@@ -469,8 +470,20 @@ namespace POSH_StarCraftBot.behaviours
         [ExecutableSense("BaseUnderAttack")]
         public bool BaseUnderAttack()
         {
-
-            return (Interface().GetAllBuildings().Where(building => building.isUnderAttack()).Count() > 0);
+            if (Interface().GetAllBuildings().Count() < 1)
+                return false;
+            int attackCounter = Interface().GetAllBuildings().Where(building => building.isUnderAttack()).Count();
+            if (attackCounter > 0)
+                return true;
+            
+            int randomMult = 3;
+            
+            if (Interface().baseLocations.ContainsKey((int)BuildSite.StartingLocation))
+                attackCounter += Interface().GetAllUnits(true).Where(unit => unit.isUnderAttack() && unit.getDistance(new Position(Interface().baseLocations[(int)BuildSite.StartingLocation])) < randomMult*DELTADISTANCE).Count();
+            
+            if (Interface().baseLocations.ContainsKey((int)BuildSite.Natural))
+                attackCounter += Interface().GetAllUnits(true).Where(unit => unit.isUnderAttack() && unit.getDistance(new Position(Interface().baseLocations[(int)BuildSite.Natural])) < randomMult*DELTADISTANCE).Count();
+            return attackCounter > 0 ;
         }
 
         /// <summary>

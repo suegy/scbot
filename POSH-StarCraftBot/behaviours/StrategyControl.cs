@@ -24,7 +24,6 @@ namespace POSH_StarCraftBot.behaviours
         /// bases are retrieved using bwta.getBaselocations
         /// </summary>
         private int scoutCounter = 1;
-        private bool reachedBaseLocation = false;
         private Strategy currentStrategy;
         private bool startStrategy = true;
         private float alarm = 0.0f;
@@ -81,6 +80,7 @@ namespace POSH_StarCraftBot.behaviours
             }
             catch (Exception)
             {
+                Console.Error.WriteLine("Idle Action Crashed");
                 return false;
             }
         }
@@ -155,21 +155,30 @@ namespace POSH_StarCraftBot.behaviours
         [ExecutableAction("OverLordToNatural")]
         public bool OverLordToNatural()
         {
+            bool executed = false;
+
             if ( Interface().baseLocations.ContainsKey((int)BuildSite.Natural)  || (scout is Unit && scout.getHitPoints() > 0 && scout.isMoving()))
-                return false;
+                return executed;
             TilePosition startLoc = Interface().baseLocations[(int)BuildSite.StartingLocation];
 
             if (scout == null || scout.getHitPoints() == 0)
                 scout = Interface().GetOverlord().Where(ol => !ol.isMoving()).OrderByDescending(ol => ol.getTilePosition().getDistance(startLoc)).First();
-            BaseLocation[] pos = bwta.getBaseLocations().Where(baseLoc => bwta.getGroundDistance(startLoc, baseLoc.getTilePosition()) > 0).OrderBy(baseLoc => bwta.getGroundDistance(startLoc, baseLoc.getTilePosition())).ToArray();
+            IOrderedEnumerable<BaseLocation> pos = bwta.getBaseLocations()
+                .Where(baseLoc => !baseLoc.getTilePosition().opEquals(startLoc) && bwta.getGroundDistance(startLoc, baseLoc.getTilePosition()) > 0)
+                .OrderBy(baseLoc => bwta.getGroundDistance(startLoc, baseLoc.getTilePosition()));
 
-            for (int i = 0; i < pos.Length; i++)
-                Console.Out.WriteLine("loc" + i + " " + bwta.getGroundDistance(pos[i].getTilePosition(), startLoc) + " " + pos[i].getTilePosition().getDistance(startLoc));
-            if (pos.Length < 1)
-                return false; 
-            scout.rightClick(pos[0].getPosition());
+            if (pos.Count() < 1)
+                return false;
 
-            return true;
+            Position target = new Position(pos.First().getTilePosition());
+            while ( (!scout.getTargetPosition().opEquals(target) || !scout.isMoving()) )
+            {
+                executed = scout.move(target, false);
+                if (_debug_)
+                    Console.Out.WriteLine("Overlord to Natural: " + executed);
+                System.Threading.Thread.Sleep(50);
+            }
+            return executed;
         }
 
         [ExecutableAction("SelectDroneScout")]
@@ -178,7 +187,7 @@ namespace POSH_StarCraftBot.behaviours
             Unit scout = null;
             IEnumerable<Unit> units = Interface().GetDrones().Where(drone =>
                 drone.getHitPoints() > 0 &&
-                !drone.isMorphing());
+                !Interface().IsBuilder(drone) );
 
             foreach (Unit unit in units)
             {
@@ -200,11 +209,13 @@ namespace POSH_StarCraftBot.behaviours
         [ExecutableAction("DroneScouting")]
         public bool DroneScouting()
         {
-            if (droneScout == null || droneScout.getHitPoints() <= 0)
+            if (droneScout == null || droneScout.getHitPoints() <= 0 || droneScout.isConstructing())
                 return false;
 
-            if (scoutCounter == bwta.getBaseLocations().Count() - 1)
-                scoutCounter = 0;
+            if (scoutCounter == bwta.getBaseLocations().Where(loc =>
+                    bwta.getGroundDistance(loc.getTilePosition(), droneScout.getTilePosition()) >= 0).Count() )
+                scoutCounter = 1;
+
 
             if (droneScout.isUnderAttack())
             {
@@ -214,22 +225,33 @@ namespace POSH_StarCraftBot.behaviours
                     droneScout.move(new Position(Interface().baseLocations[(int)BuildSite.StartingLocation]));
                 return false;
             }
+
+            if (droneScout.isMoving())
+                return true;
+
             if (droneScout.getPosition().getDistance(
-                bwta.getBaseLocations().OrderBy(loc =>
-                    loc.getTilePosition().getDistance(Interface().baseLocations[(int)BuildSite.StartingLocation]))
-                    .ElementAt(scoutCounter)
+                bwta.getBaseLocations().Where(loc =>
+                    bwta.getGroundDistance(loc.getTilePosition(), droneScout.getTilePosition()) >= 0).OrderBy(loc =>
+                    bwta.getGroundDistance(loc.getTilePosition(),Interface().baseLocations[(int)BuildSite.StartingLocation]))
+                    .ElementAt(scoutCounter-1)
                     .getPosition()
                     ) < DELTADISTANCE)
             {
-                // close to another base location 
-                Interface().baseLocations[scoutCounter] = new TilePosition(droneScout.getTargetPosition());
+                // close to another base location
+                if (!Interface().baseLocations.ContainsKey(scoutCounter))
+                    Interface().baseLocations[scoutCounter] = new TilePosition(droneScout.getTargetPosition());
                 scoutCounter++;
             }
             else
             {
-                droneScout.move(bwta.getBaseLocations().OrderBy(loc =>
-                    loc.getTilePosition().getDistance(Interface().baseLocations[(int)BuildSite.StartingLocation]))
-                    .ElementAt(scoutCounter).getPosition());
+
+                bool executed = droneScout.move(bwta.getBaseLocations().Where(loc =>
+                    bwta.getGroundDistance(loc.getTilePosition(), droneScout.getTilePosition()) >= 0).OrderBy(loc =>
+                    bwta.getGroundDistance(loc.getTilePosition(),Interface().baseLocations[(int)BuildSite.StartingLocation]))
+                    .ElementAt(scoutCounter-1)
+                    .getPosition());
+                // if (_debug_)
+                Console.Out.WriteLine("Drone is scouting: " + executed); 
             }
 
             return true;
@@ -323,31 +345,41 @@ namespace POSH_StarCraftBot.behaviours
         [ExecutableSense("NeedOverlordAtNatural")]
         public bool NeedOverlordAtNatural()
         {
-            if (scout == null || scout.getHitPoints() == 0 || ( !scout.isMoving() && !reachedBaseLocation) || !Interface().baseLocations.ContainsKey((int)BuildSite.Natural))
+            if (Interface().baseLocations.ContainsKey((int)BuildSite.Natural))
+                return false;
+            if (scout == null || scout.getHitPoints() == 0 )
                 return true;
             
             TilePosition startLoc = Interface().baseLocations[(int)BuildSite.StartingLocation];
-            BaseLocation[] pos = bwta.getBaseLocations().Where(
-                baseLoc => bwta.getGroundDistance(startLoc, baseLoc.getTilePosition()) > 0 &&
-                bwta.getGroundDistance(startLoc, baseLoc.getTilePosition()) > 0 &&
-                Interface().baseLocations.Values.Where(location => location.getDistance(baseLoc.getTilePosition()) < DELTADISTANCE).Count() == 0
-                )
-                .OrderBy(baseLoc => bwta.getGroundDistance(startLoc, baseLoc.getTilePosition())).ToArray();
 
-            if (scout.getDistance(pos[0].getPosition()) < DELTADISTANCE && !reachedBaseLocation)
+            IOrderedEnumerable<BaseLocation> pos = bwta.getBaseLocations()
+                .Where(baseLoc => !baseLoc.getTilePosition().opEquals(startLoc) && bwta.getGroundDistance(startLoc, baseLoc.getTilePosition()) > 0)
+                .OrderBy(baseLoc => bwta.getGroundDistance(startLoc, baseLoc.getTilePosition()));
+            Console.Out.WriteLine("startLoc: "+startLoc.xConst()+" "+startLoc.yConst());
+            foreach(BaseLocation poi in pos)
+                Console.Out.WriteLine("Loc: " + poi.getTilePosition().xConst() + " " + poi.getTilePosition().yConst() + " dist: " + bwta.getGroundDistance(startLoc, poi.getTilePosition()));
+            if (pos.Count() < 1)
+                return true;
+
+            double dist = scout.getDistance(pos.First().getPosition());
+            Console.Out.WriteLine("distance from natural: "+dist);
+            if (dist < DELTADISTANCE && !Interface().baseLocations.ContainsKey((int)BuildSite.Natural))
             {
-                Interface().baseLocations[(int)BuildSite.Natural] = pos[0].getTilePosition();
-                reachedBaseLocation = true;
+                Interface().baseLocations[(int)BuildSite.Natural] = pos.First().getTilePosition();
+                
+                //if (_debug_)
+                    Console.Out.WriteLine("overlord to natural: " + Interface().baseLocations[(int)BuildSite.Natural].xConst() + " " + Interface().baseLocations[(int)BuildSite.Natural].yConst());
+                    scout = null;
+                return false;
             }
 
-            return false;
+            return true;
         }
 
         [ExecutableSense("DoneExploringLocal")]
         public bool DoneExploringLocal()
         {
-
-            return reachedBaseLocation;
+            return Interface().baseLocations.ContainsKey((int)BuildSite.Natural);
         }
 
         /// <summary>
@@ -417,7 +449,11 @@ namespace POSH_StarCraftBot.behaviours
         [ExecutableSense("DroneExtractorRatio")]
         public float DroneExtractorRatio()
         {
-            return Interface().GetDrones().Where(drone => drone.isGatheringMinerals()).Count() / Interface().GetDrones().Where(drone => drone.isGatheringGas()).Count();
+            if (Interface().GetExtractors().Count() < 0 || Interface().GetExtractors().Where(ex => ex.isCompleted() && ex.getResources() > 0 && ex.getHitPoints() > 0).Count() < 1)
+                return 1;
+            if (Interface().GetDrones().Count() < 1 || Interface().GetDrones().Where(drone => drone.isGatheringMinerals()).Count() < 1)
+                return 1;
+            return Interface().GetDrones().Where(drone => drone.isGatheringGas()).Count() / Interface().GetDrones().Where(drone => drone.isGatheringMinerals()).Count();
         }
 
         [ExecutableSense("DronesLured")]
@@ -430,14 +466,14 @@ namespace POSH_StarCraftBot.behaviours
         public float Alarm()
         {
             alarm = (alarm < 0.0f) ? 0.0f : alarm - 0.05f;
-
+            
             return alarm;
         }
 
         [ExecutableSense("DroneScoutAvailable")]
         public bool DroneScoutAvailable()
         {
-            return (droneScout is Unit && droneScout.getHitPoints() > 0) ? true : false;
+            return (droneScout is Unit && droneScout.getHitPoints() > 0 && !droneScout.isConstructing() && !droneScout.isRepairing()) ? true : false;
         }
 
 
