@@ -189,7 +189,8 @@ namespace POSH_StarCraftBot
             }
             else
             {
-                forces[ForceLocations.Build].RemoveAll(unit => unit.SCUnit.getBuildType().isBuilding() || unit.SCUnit.isMorphing()|| unit.SCUnit.getHitPoints() <= 0);
+                //TODO: dirty fix as it seems that once a unit is moving to build something the system thinks it started to build
+                forces[ForceLocations.Build].RemoveAll(unit => unit.SCUnit.getType().isBuilding() || unit.SCUnit.isIdle() || unit.SCUnit.getHitPoints() <= 0);
             }
             if (forces[ForceLocations.Build].Count > 0)
                 return forces[ForceLocations.Build].OrderBy(unit => unit.SCUnit.getDistance(new Position(location))).First().SCUnit;

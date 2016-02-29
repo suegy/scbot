@@ -28,13 +28,15 @@ namespace POSH_StarCraftBot.behaviours
         [ExecutableAction("HydraSpeedUpgrade")]
         public bool HydraSpeedUpgrade()
         {
-            return Interface().GetHydraDens().Where(den => !den.isUpgrading() && den.getHitPoints() > 0).First().upgrade(bwapi.UpgradeTypes_Muscular_Augments);
+            IEnumerable<Unit> dens = Interface().GetHydraDens().Where(den => den.isCompleted() && !den.isUpgrading() && den.getHitPoints() > 0);
+            return (dens.Count() > 0) ? dens.First().upgrade(bwapi.UpgradeTypes_Muscular_Augments) : false;
         }
 
         [ExecutableAction("HydraRangeUpgrade")]
         public bool HydraRangeUpgrade()
         {
-            return Interface().GetHydraDens().Where(den => !den.isUpgrading() && den.getHitPoints() > 0).First().upgrade(bwapi.UpgradeTypes_Grooved_Spines);
+            IEnumerable<Unit> dens = Interface().GetHydraDens().Where(den => den.isCompleted() && !den.isUpgrading() && den.getHitPoints() > 0);
+            return (dens.Count() > 0) ? dens.First().upgrade(bwapi.UpgradeTypes_Grooved_Spines) : false;
         }
 
         [ExecutableAction("FinishedResearch")]

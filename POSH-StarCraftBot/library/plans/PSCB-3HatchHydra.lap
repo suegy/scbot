@@ -3,66 +3,212 @@
 ; lost the next time the tool is used.
 ; -------------------------------------------------------------
 (
-
-(AP defendBase (minutes 1.0) (
+(documentation "Your Title" "Your Name" "Your file comments")
+(AP flee (minutes 1.0) (
 	RetreatForce
 ))
 (AP buildSP (minutes 1.0) (
+	SelectStartBase 
 	PositionSpwnPl 
 	BuildSpwnPl
 ))
 (AP buildExtractor (minutes 1.0) (
+	SelectStartBase 
 	SelectExtractorLocation 
 	BuildExtractor
 ))
 (AP idle (minutes 1.0) (
 	Idle
 ))
-(AP expandBase (minutes 1.0) (
-	SelectExtension 
+(AP naturalHatchery (minutes 1.0) (
+	SelectNatural 
+	PositionHatchery 
 	BuildHatchery
 ))
-(C buildBase (minutes 1.0) (goal ())
+(AP counterLure (minutes 1.0) (
+	RespondToLure 
+	AssignDrones
+))
+(AP buildHydraDen (seconds 1.0) (
+	SelectStartBase 
+	PositionHydraDen 
+	BuildHydraDen
+))
+(AP luredDefence (minutes 1.0) (
+	SelectLuredBase 
+	CounterWithForce
+))
+(AP buildThirdHatchery (seconds 1.0) (
+	SelectStartBase 
+	PositionHatchery 
+	BuildHatchery
+))
+(AP zergling (minutes 1.0) (
+	SelectNatural 
+	SelectChoke 
+	MorphZergling
+))
+(AP hydra (minutes 1.0) (
+	SelectStartBase 
+	SelectChoke 
+	MorphHydralisk
+))
+(AP stdHydraArmy (minutes 1.0) (
+	SelectForceStartingLocation 
+	AssignArmyOne
+))
+(AP moveArmyOne (minutes 1.0) (
+	SelectArmyOne 
+	AttackEnemyMainBase 
+	FinishedForce
+))
+(AP sendDefendForce (minutes 1.0) (
+	SelectAttackedBase 
+	SelectArmyTwo 
+	FendOffUnits
+))
+(AP DefenceHydras (minutes 1.0) (
+	SelectDefenceBase 
+	MorphHydralisk
+))
+(AP DefenceZerglings (minutes 1.0) (
+	SelectDefenceBase 
+	MorphZergling
+))
+(AP ReadyUnits (minutes 1.0) (
+	AssignArmyTwo
+))
+(C buildThreeHatchHydra (minutes 1.0) (goal ((HatcheryCount 3.0 >=) (ExtractorCount 1.0 >=) (HydraDenCount 1.0 >=) (LairCount 1.0 >=) (DroneCount 14.0 >=)))
 	(elements
-		(	(sendDrones (trigger ((IdleDrones 1 >=))) AssignDrones)	)
-		(	(morphOverlord (trigger ((TotalSupply 12 <=))) MorphOverlord)	)
-		(	(morphDrones (trigger ((TotalSupply 13 <=) (AvailableSupply 5 >))) MorphDrone)	)
-		(	(buildHatchery (trigger ((TotalSupply 13.0 ==))) expandBase)	)
-		(	(buildSpawningPool (trigger ((TotalSupply 11 ==))) buildSP)	)
-		(	(buildExtractor (trigger ((TotalSupply 16.0 ==))) buildExtractor)	)
-		(	(upgradeToLair (trigger ((Gas 100 >=))) UpgradeHatchery)	)
-		(	(buildHydraDen (trigger ((TotalSupply 24 ==))) UpgradeHatchery)	)
+		(	(morphOverlord (trigger ((AvailableSupply 2.0 <=))) MorphOverlord)	)
+		(	(morphDrones (trigger ((TotalSupply 17.0 <=) (Supply 12.0 <) (DroneCount 12.0 <))) MorphDrone)	)
+		(	(buildNaturalHatchery (trigger ((Supply 12.0 >=) (HatcheryCount 2.0 <))) extendToNatural)	)
+		(	(buildSpawningPool (trigger ((Supply 14.0 <) (SpawnPoolCount 1.0 <))) buildSP)	)
+		(	(morphDrones (trigger ((TotalSupply 18.0 >=) (DroneCount 14.0 <))) MorphDrone)	)
+		(	(buildThirdHatchery (trigger ((Supply 14.0 >=) (HatcheryCount 3.0 <))) buildThirdHatchery)	)
+		(	(buildExtractor (trigger ((TotalSupply 15.0 >=) (ExtractorCount 1.0 <))) buildExtractor)	)
+		(	(buildHydraDen (trigger ((Gas 50.0 >=) (HydraDenCount 1.0 <))) buildHydraDen)	)
+		(	(buildSecondExtractor (trigger ((HydraDenCount 0.0 >) (LairCount 1.0 <))) UpgradeHatchery)	)
 	)
 )
-
-(C buildForce (minutes 1.0) (goal ())
+(C extendToNatural (seconds 1.0) (goal ((HaveNaturalHatchery 1.0 ==)))
 	(elements
-		(	(buildZerglings (trigger ((ZerglingCount 6.0 <=))) MorphZergling)	)
+		(	(BuildNaturalHatchery (trigger ((NaturalFound 1.0 ==))) naturalHatchery)	)
 	)
 )
-(C attack (minutes 1.0) (goal ())
+(C stopLuring (seconds 1.0) (goal ((DronesLured 0.0 ==)))
 	(elements
-		(	(attackBase (trigger ()) AttackEnemyMainBase)	)
+		(	(CheckLuring (trigger ((DronesLured 1.0 ==))) counterLure)	)
+		(	(buildDefence (trigger ((Alarm 0.5 >=))) luredDefence)	)
 	)
 )
-
-(SDC 3HatchHydra (goal ())
+(C extendWorldKnowledge (seconds 1.0) (goal ((GameRunning 1.0 !=)))
+	(elements
+		(	(findExtension (trigger ((DoneExploringLocal 1.0 !=) (NeedOverlordAtNatural 1.0 ==))) OverLordToNatural)	)
+		(	(droneExploring (trigger ((DroneCount 9.0 >=) (DoneExploring 1.0 !=))) droneScouting)	)
+	)
+)
+(C droneHarvesting (seconds 1.0) (goal ((Success 1.0 !=)))
+	(elements
+		(	(luredDrones (trigger ((DronesLured))) stopLuring)	)
+		(	(miningGas (trigger ((ExtractorCount 1.0 >=) (DroneExtractorRatio 0.15 <=))) AssignToGas)	)
+		(	(miningCrystal (trigger ((IdleDrones))) AssignDrones)	)
+	)
+)
+(C buildThreeHatchHydraForce (seconds 1.0) (goal ((Success 0.0 ==)))
+	(elements
+		(	(buildZerglings (trigger ((Supply 14.0 >=) (SpawnPoolCount 0.0 >) (ZerglingCount 2.0 <))) zergling)	)
+		(	(buildHydras (trigger ((FollowStrategy 0.0 ==) (HydraDenCount 0.0 >))) hydra)	)
+	)
+)
+(C researchThreeHatch (seconds 1.0) (goal ((HaveHydraRange 1.0 ==) (HaveHydraSpeed 1.0 ==)))
+	(elements
+		(	(resHydraSpeed (trigger ((HaveHydraSpeed 1.0 !=) (HydraDenCount 0.0 >))) HydraSpeedUpgrade)	)
+		(	(resHydraRange (trigger ((HaveHydraRange 1.0 !=) (HydraDenCount 0.0 >))) HydraRangeUpgrade)	)
+		(	(doneResearch (trigger ((HaveHydraRange 1.0 ==) (HaveHydraSpeed 1.0 ==))) FinishedResearch)	)
+	)
+)
+(C strategySelection (seconds 1.0) (goal ((Success 1.0 !=)))
+	(elements
+		(	(UnknownEnemy (trigger ((EnemyRace 0.0 ==))) PursueThreeHatchHydra)	(Protoss (trigger ((EnemyRace 2.0 ==))) PursueThreeHatchHydra)	)
+	)
+)
+(C droneScouting (seconds 1.0) (goal ((DoneExploring)))
+	(elements
+		(	(selectDrone (trigger ((DroneCount 9.0 >=) (DroneScoutAvailable 1.0 !=))) SelectDroneScout)	)
+		(	(explore (trigger ((DroneScoutAvailable 1.0 ==))) DroneScouting)	)
+	)
+)
+(C repairBuildings (seconds 1.0) (goal ((BuildingDamaged 0.0 ==)))
+	(elements
+		(	(repairBuilding (trigger ((FindDamagedBuilding))) RepairBuilding)	)
+	)
+)
+(C buildBases (seconds 1.0) (goal ((NeedBuilding 0.0 ==)))
+	(elements
+		(	(threeHatchHydra (trigger ((FollowStrategy 0.0 ==))) buildThreeHatchHydra)	)
+	)
+)
+(C createUnits (minutes 1.0) (goal ((GameRunning 0.0 ==)))
+	(elements
+		(	(threeHatchUnits (trigger ((FollowStrategy 0.0 ==))) buildThreeHatchHydraForce)	)
+	)
+)
+(C research (seconds 1.0) (goal ((DoneResearch 1.0 ==)))
+	(elements
+		(	(threeHatch (trigger ((FollowStrategy 0.0 ==) (HydraDenCount 0.0 !=))) researchThreeHatch)	)
+	)
+)
+(C attackThreeHatchHydra (seconds 1.0) (goal ((GameRunning)))
+	(elements
+		(	(attackArmyOne (trigger ((ArmyOneReady) (KnowEnemyBase))) moveArmyOne)	)
+		(	(buildArmyOne (trigger ((HaveHydraSpeed) (HaveHydraRange) (HydraliskCount 24.0 >=) (ArmyOneReady 0.0 ==))) stdHydraArmy)	)
+	)
+)
+(C attackEnemy (minutes 1.0) (goal ((GameRunning 0.0 ==)))
+	(elements
+		(	(attackThreeHatch (trigger ((HydraliskCount 24.0 >=))) attackThreeHatchHydra)	)
+	)
+)
+(C defendLocation (seconds 1.0) (goal ((BaseUnderAttack 0.0 ==)))
+	(elements
+		(	(SendArmy (trigger ((ArmyTwoReady))) sendDefendForce)	)
+		(	(ReadyArmyTwo (trigger ((CanCreateUnits) (ArmyTwoReady 1.0 !=))) setDefenceForce)	)
+	)
+)
+(C setDefenceForce (minutes 1.0) (goal ((ArmyTwoReady)))
+	(elements
+		(	(DefenceCheck (trigger ((DefenderAttackerReadyRatio 1.0 <=) (CombatUnits 2 >=))) ReadyUnits)	)
+		(	(CreateHydras (trigger ((CanCreateUnits) (HydraDenCount 1.0 >=))) DefenceHydras)	)
+		(	(CreateZerglings (trigger ((CanCreateUnits))) DefenceZerglings)	)
+	)
+)
+(SRDC ThreeHatchHydra (goal ((GameRunning 0.0 ==)))
 	(drives
 		(
 
-		(defend (trigger ((BaseUnderAttack 1.0 =))) defendBase))
+		(strategize (trigger ((GameRunning 1.0 ==))) strategySelection(seconds 2.0)))
 		(
 
-		(retreat (trigger ((ForceIsLosing 1.0 =))) defendBase))
+		(retreat (trigger ((ForceIsLosing 1.0 =))) flee(seconds 1.0))		
+
+		(attack (trigger ((CanAttack))) attackEnemy(seconds 0.5))		
+
+		(defend (trigger ((BaseUnderAttack 1.0 ==))) defendLocation(seconds 0.5)))
 		(
 
-		(createForce (trigger ((BuildArmy 1.0 =))) buildForce))
+		(harvest (trigger ((DroneCount 1.0 >=) (IdleDrones))) droneHarvesting(seconds 0.5))		
+
+		(repair (trigger ((BuildingDamaged 1.0 ==))) repairBuildings(seconds 0.5)))
 		(
 
-		(attack (trigger ((AttackPrepared 1.0 =))) attack))
-		(
+		(build (trigger ((NeedBuilding 1.0 ==))) buildBases(seconds 0.25))		
 
-		(build (trigger ((NeedBuilding 1.0 =))) buildBase))
+		(research (trigger ((Success))) research(seconds 0.5))		
+
+		(createForce (trigger ((CanCreateUnits))) createUnits(seconds 0.25))		
+
+		(explore (trigger ((DoneExploring 0.0 ==))) extendWorldKnowledge(seconds 0.25)))
 		(
 
 		(wait (trigger ((Success))) idle))

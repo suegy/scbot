@@ -94,11 +94,13 @@ namespace POSH_StarCraftBot.behaviours
             {
                 if (maxUnits < 1)
                     break;
-                
-                if (resources.Contains(drone.getOrderTarget()) && drone.getTarget().getResources() > 0 &&
+
+                if (drone.getOrderTarget() is Unit && drone.getTarget() is Unit && resources.Contains(drone.getOrderTarget()) && drone.getTarget().getResources() > 0 &&
                     mined.ContainsKey(ConvertTilePosition(drone.getOrderTarget().getTilePosition())))
                 {
                     Console.Out.WriteLine("test");
+                    Console.Out.WriteLine("drone.getOrderTarget()" + drone.getOrderTarget().getID());
+                    Console.Out.WriteLine("test" + drone.getTarget().getID());
                     continue;
                 }
 
@@ -193,6 +195,13 @@ namespace POSH_StarCraftBot.behaviours
             return forceReady;
         }
 
+        [ExecutableSense("CanAttack")]
+        public bool CanAttack()
+        {
+            
+            return Interface().GetAllUnits(false).Where(unit => !unit.isUnderAttack() && !unit.isAttacking()).Count() > 10 || forceReady;
+        }
+
         [ExecutableSense("IdleDrones")]
         public bool IdleDrones()
         {
@@ -254,7 +263,7 @@ namespace POSH_StarCraftBot.behaviours
         [ExecutableAction("MorphOverlord")]
         public bool MorphOverlord()
         {
-            return CheckForMorphingUnits(bwapi.UnitTypes_Zerg_Overlord) >= 1 ? false: MorphUnit(bwapi.UnitTypes_Zerg_Overlord);
+            return CheckForMorphingUnits(bwapi.UnitTypes_Zerg_Overlord) >= 1 ? false : MorphUnit(bwapi.UnitTypes_Zerg_Overlord);
         }
 
         [ExecutableAction("MorphHydralisk")]
@@ -272,7 +281,7 @@ namespace POSH_StarCraftBot.behaviours
         [ExecutableAction("MorphLurker")]
         public bool MorphLurker()
         {
-            return MorphUnit(bwapi.UnitTypes_Zerg_Lurker);
+            return CheckForMorphingUnits(bwapi.UnitTypes_Zerg_Lurker) >= 1 ? false : MorphUnit(bwapi.UnitTypes_Zerg_Lurker);
         }
 
         [ExecutableAction("AssignDrones")]

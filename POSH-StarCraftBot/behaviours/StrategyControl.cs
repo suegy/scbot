@@ -28,12 +28,13 @@ namespace POSH_StarCraftBot.behaviours
         private bool startStrategy = true;
         private float alarm = 0.0f;
         private GamePhase phase;
+        private int maxBaseLocations;
 
 
         public StrategyControl(AgentBase agent)
             : base(agent, new string[] { }, new string[] { })
         {
-
+            
         }
         //
         // INTERNAL
@@ -184,6 +185,9 @@ namespace POSH_StarCraftBot.behaviours
         [ExecutableAction("SelectDroneScout")]
         public bool SelectDroneScout()
         {
+            if (droneScout != null && droneScout.getHitPoints() > 0 && droneScout.getType().isWorker())
+                return true;
+
             Unit scout = null;
             IEnumerable<Unit> units = Interface().GetDrones().Where(drone =>
                 drone.getHitPoints() > 0 &&
@@ -209,11 +213,19 @@ namespace POSH_StarCraftBot.behaviours
         [ExecutableAction("DroneScouting")]
         public bool DroneScouting()
         {
+            // no scout alive or selected
             if (droneScout == null || droneScout.getHitPoints() <= 0 || droneScout.isConstructing())
                 return false;
 
-            if (scoutCounter == bwta.getBaseLocations().Where(loc =>
-                    bwta.getGroundDistance(loc.getTilePosition(), droneScout.getTilePosition()) >= 0).Count() )
+            IEnumerable<BaseLocation> baseloc = bwta.getBaseLocations().Where(loc =>
+                    bwta.getGroundDistance(loc.getTilePosition(), droneScout.getTilePosition()) >= 0);
+
+            if (baseloc.Count() > maxBaseLocations)
+                maxBaseLocations = baseloc.Count();
+            if (baseloc.Count() < maxBaseLocations && scoutCounter > baseloc.Count())
+                return false;
+            // reached the last accessible base location away and turn back to base
+            if (scoutCounter > maxBaseLocations )
                 scoutCounter = 1;
 
 
@@ -221,21 +233,24 @@ namespace POSH_StarCraftBot.behaviours
             {
                 if (Interface().baseLocations.ContainsKey((int)BuildSite.Natural))
                     droneScout.move(new Position(Interface().baseLocations[(int)BuildSite.Natural]));
-                else
-                    droneScout.move(new Position(Interface().baseLocations[(int)BuildSite.StartingLocation]));
+                else if (Interface().baseLocations.ContainsKey((int)BuildSite.Extension))
+                {
+                    droneScout.move(new Position(Interface().baseLocations[(int)BuildSite.Extension]));
+                }
                 return false;
             }
 
+            // still scouting
             if (droneScout.isMoving())
                 return true;
 
-            if (droneScout.getPosition().getDistance(
-                bwta.getBaseLocations().Where(loc =>
-                    bwta.getGroundDistance(loc.getTilePosition(), droneScout.getTilePosition()) >= 0).OrderBy(loc =>
+            double distance = droneScout.getPosition().getDistance(
+                baseloc.OrderBy(loc =>
                     bwta.getGroundDistance(loc.getTilePosition(),Interface().baseLocations[(int)BuildSite.StartingLocation]))
-                    .ElementAt(scoutCounter-1)
+                    .ElementAt(scoutCounter)
                     .getPosition()
-                    ) < DELTADISTANCE)
+                    );
+            if ( distance < DELTADISTANCE)
             {
                 // close to another base location
                 if (!Interface().baseLocations.ContainsKey(scoutCounter))
@@ -244,12 +259,12 @@ namespace POSH_StarCraftBot.behaviours
             }
             else
             {
-
-                bool executed = droneScout.move(bwta.getBaseLocations().Where(loc =>
+                IEnumerable<BaseLocation> bases = baseloc.Where(loc =>
                     bwta.getGroundDistance(loc.getTilePosition(), droneScout.getTilePosition()) >= 0).OrderBy(loc =>
-                    bwta.getGroundDistance(loc.getTilePosition(),Interface().baseLocations[(int)BuildSite.StartingLocation]))
-                    .ElementAt(scoutCounter-1)
-                    .getPosition());
+                    bwta.getGroundDistance(loc.getTilePosition(), Interface().baseLocations[(int)BuildSite.StartingLocation]));
+                bool executed = false;
+                if (bases.Count() > scoutCounter)
+                    executed = droneScout.move(bases.ElementAt(scoutCounter).getPosition());
                 // if (_debug_)
                 Console.Out.WriteLine("Drone is scouting: " + executed); 
             }
