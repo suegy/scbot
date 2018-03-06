@@ -44,12 +44,12 @@ namespace POSH_StarCraftBot.behaviours
             bool executed = false;
             if (unit.getDistance(target) < DELTADISTANCE)
                 return false;
-            while (!unit.getTargetPosition().opEquals(target) && !unit.isMoving() && timeout-- > 0)
+            while (!unit.getTargetPosition().opEquals(target) && timeout-- > 0)
             {
                 executed = unit.move(target, false);
                 if (_debug_)
                     Console.Out.WriteLine("unit "+unit.getID()+" to target: " + executed);
-                System.Threading.Thread.Sleep(10);
+                System.Threading.Thread.Sleep(50);
             }
             return executed;
         }

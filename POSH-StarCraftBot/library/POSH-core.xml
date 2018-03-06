@@ -1,0 +1,3215 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>POSH-core</name>
+    </assembly>
+    <members>
+        <!-- Badly formed XML comment ignored for member "T:POSH.sys.Profiler" -->
+        <member name="M:POSH.sys.AssemblyControl.getRootPath">
+            <summary>
+            Returns the root path that POSH is installed in. Assumes that this
+            module resides in the root path.
+            </summary>
+            <returns>Root path</returns>
+        </member>
+        <member name="M:POSH.sys.AssemblyControl.getAssemblyLibrary(System.String)">
+            <summary>
+            Returns the path to the behaviour assembly directory. If no library is given,
+            then the base path of the library is returned.
+            </summary>
+            <param name="lib">The library to return the path for</param>
+            <returns>The base library path or the path to the given library</returns>
+        </member>
+        <member name="M:POSH.sys.AssemblyControl.getPlanPath(System.String)">
+            <summary>
+            Returns the path to the plans of the given behaviour library.
+            </summary>
+            <param name="lib">The library to return the path for</param>
+            <returns>The path to the plans</returns>
+        </member>
+        <member name="M:POSH.sys.AssemblyControl.isBehaviour(System.Object)">
+            <summary>
+            Returns if the given class object is a subclass of a behaviour class.
+            </summary>
+            <param name="o">An object</param>
+            <returns>If the given class is a subclass of L{POSH.Behaviour}</returns>
+        </member>
+        <member name="M:POSH.sys.AssemblyControl.getPlans(System.String)">
+            <summary>
+            Returns a list of available plans for the given behaviour library.
+            
+            The plans need to be located at library/PLANS and end in PLANENDING.
+            </summary>
+            <param name="lib">The library to return the list of plans for</param>
+            <returns>A list of plans without file ending</returns>
+        </member>
+        <member name="M:POSH.sys.AssemblyControl.GetPlanFile(System.String,System.String)">
+            <summary>
+            Returns the plan file name for the given library and plan
+            </summary>
+            <param name="lib">The library that the plan is from</param>
+            <param name="plan">The name of the plan (without the .lap ending)</param>
+            <returns>The plan in the form of a single string, still containing linebreaks</returns>
+        </member>
+        <member name="M:POSH.sys.AssemblyControl.isPlan(System.String,System.String)">
+            <summary>
+            Returns if the given plan of the given library exists.
+            
+            This method only checks if the plan file exists, not if its syntax is
+            correct.
+            </summary>
+            <param name="lib">The library that the plan is from</param>
+            <param name="plan">The name of the plan (without the .lap ending)</param>
+            <returns>If the plan exists (i.e. is a file)</returns>
+        </member>
+        <member name="M:POSH.sys.AssemblyControl.getLibraries">
+            <summary>
+            Returns a list of available behaviour libraries.
+            
+            The function assumes that any directory in the libraries path that
+            does not start with an '.' is a behaviour library.
+            </summary>
+            <returns>List of libraries</returns>
+        </member>
+        <member name="M:POSH.sys.AssemblyControl.isLibrary(System.String,System.String)">
+            <summary>
+            Returns if the given library is a valid behaviour library.
+            
+            This is the case if the following requirements are met:
+                - there is a directory with the given name in LIBRARYPATH
+                - the directory can be loaded as a module, which requires it to at least
+                  contain a __init__.py file
+            </summary>
+            <param name="lib">Name of the library to check</param>
+            <returns>If the library is a valid library</returns>
+        </member>
+        <member name="M:POSH.sys.AssemblyControl.defaultWorldScript(System.String)">
+            <summary>
+            Returns the default world initialisation script for the given library.
+            
+            If no script was found, then an empty string is returned.
+            </summary>
+            <param name="lib">Name of the library</param>
+            <returns>World initialisatoin script filename, of '' if not found</returns>
+        </member>
+        <member name="M:POSH.sys.AssemblyControl.GetBehaviours(System.String,log4net.ILog,POSH.sys.AgentBase)">
+            <summary>
+            Returns a sequence of classes, containing all behaviour classes that
+            are available in a particular library.
+            
+            The method searches the behaviour subclasses by attempting to import
+            all file in the library ending in .dll, except for the WORLDSCRIPT, and
+            search through all classes they contain to see if they are derived from
+            any behaviour class.
+            
+            If a log object is given, then logging output at the debug level is
+            produced.
+            </summary>
+            <param name="lib">Name of the library to find the classes for</param>
+            <param name="log">A log object</param>
+            <returns>The dictionary containing the Assembly dll name and the included Behaviour classes</returns>
+        </member>
+        <member name="M:POSH.sys.AssemblyControl.defaultAgentInit(System.String)">
+            <summary>
+            Returns the default agent initialisation file filename for the given
+            library.
+            
+            If no such file exists, and emtpy string is returned.
+            </summary>
+            <param name="lib">Name of the library</param>
+            <returns>Agent initialisation file filename, or "" if not found</returns>
+        </member>
+        <member name="M:POSH.sys.AssemblyControl.InitAgents(System.Boolean,System.String,System.String)">
+            <summary>
+            
+            </summary>
+            <param name="verbose"></param>
+            <param name="assembly"></param>
+            <param name="agentLibrary"></param>
+            <returns>returns a dictionary containing agentnames and a dictionary containing attributes for the agent</returns>
+        </member>
+        <member name="M:POSH.sys.AssemblyControl.UniqueAgendId">
+            <summary>
+            Returns a unique agent id string of the form 'Axx', where xx is
+            an increasing number, starting from 00.
+            
+            If more than 99 agents are created, the string length adjusts to the
+            length of the number.
+            </summary>
+            <returns>Unique agent id</returns>
+        </member>
+        <member name="M:POSH.sys.AssemblyControl.runWorldScript(System.Type,System.String,System.String,System.Collections.Generic.List{POSH.sys.Tuple{System.String,System.Object}})">
+            <summary>
+            Runs the given file to initialise the world and returns the world object
+            and if the world initialisation script creates and runs the agents
+            itself.
+            
+            This method creates an instance of the class L{World} and makes it
+            accessible to the world initialisation script under the instance name
+            'world'. Using this instance, the world intialisation script can
+            cimmunicate with this function.
+            </summary>
+            <param name="scriptFile">The filename of the script to run</param>
+            <param name="lib">name of the behaviour library to use by agents</param>
+            <param name="worldArgs">arguments given to the world initialisation script</param>
+            <param name="agentsInit">agent initialisation information structure</param>
+            <returns>tuple (world object, if script created and ran agents)</returns>
+        </member>
+        <member name="M:POSH.sys.AssemblyControl.Running(System.Boolean,POSH.sys.AgentBase[],System.Boolean)">
+            <summary>
+            Running is checking if the agents are still active. 
+            The method should be called only once when all agents are started to either iteratively check if they are all active(loopsRunning = true). In this case, 
+            the method will only return when all agents stoped running.
+            If you want externally check if the agents are active use loopsRunning = false to see if at least one agent is alive.
+            </summary>
+            <param name="verbose">If true, we try to write an info stream to the Console.</param>
+            <param name="agents">The list of Agents we want to check.</param>
+            <param name="iterate">If true, we iterativly check all agents and return once none is active. 
+            If false, we just execute one cycle and return if at least one agent is active.</param>
+            <returns> Returns the status of the system based on at least one active agent.</returns>
+        </member>
+        <member name="M:POSH.sys.AssemblyControl.ReLinkAgents(POSH.sys.AgentBase,System.String)">
+            <summary>
+            
+            </summary>
+            <param name="agent"></param>
+            <param name="planName"></param>
+            <returns></returns>
+        </member>
+        <member name="P:POSH.sys.AssemblyControl.world">
+            <summary>
+            Sets the world object for use when initialising the agents.
+            
+            The world object given to this method is given to the agents upon
+            initialisation.
+            </summary>
+        </member>
+        <member name="P:POSH.sys.AssemblyControl.worldScript">
+            <summary>
+            worldScript is contained in the dll of a certain AI it is an executable object which sets certain elements
+            The first element is the contained dll the second the name of the type
+            </summary>
+        </member>
+        <member name="P:POSH.sys.AssemblyControl.config">
+            <summary>
+            config is a file containing a list of different environment variables
+            </summary>
+        </member>
+        <member name="F:POSH.sys.EmbeddedControl.actionPlans">
+            <summary>
+            Contains the different lap files used for possible agents.
+            They key is the planID.
+            </summary>
+        </member>
+        <member name="F:POSH.sys.EmbeddedControl.initParameters">
+            <summary>
+            The dictionary contains the agents and their internal parameters which will be used. Key of the outer dict is the planID. 
+            The second dict contains parameters and their values in string representation.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.EmbeddedControl.GetBehaviours(System.String,log4net.ILog,POSH.sys.AgentBase)">
+            <summary>
+            Returns a sequence of classes, containing all behaviour classes that
+            are available in a particular library.
+            
+            The method searches the behaviour subclasses by attempting to import
+            all file in the library ending in .dll, except for the WORLDSCRIPT, and
+            search through all classes they contain to see if they are derived from
+            any behaviour class.
+            
+            If a log object is given, then logging output at the debug level is
+            produced.
+            </summary>
+            <param name="lib">Name of the library to find the classes for</param>
+            <param name="log">A log object</param>
+            <returns>The dictionary containing the Assembly dll name and the included Behaviour classes</returns>
+        </member>
+        <member name="M:POSH.sys.EmbeddedControl.GetPlanFile(System.String,System.String)">
+            <summary>
+            Returns the plan file name for the given library and plan
+            </summary>
+            <param name="lib">The library that the plan is from</param>
+            <param name="plan">The name of the plan (without the .lap ending)</param>
+            <returns>The filename with full path of the plan</returns>
+        </member>
+        <member name="M:POSH.sys.EmbeddedControl.InitAgents(System.Boolean,System.String,System.String)">
+            <summary>
+            
+            </summary>
+            <param name="verbose"></param>
+            <param name="assembly"></param>
+            <param name="agentLibrary"></param>
+            <returns>returns a dictionary containing agentnames and a dictionary containing attributes for the agent</returns>
+        </member>
+        <member name="T:POSH.sys.strict.ElementCollection">
+            <summary>
+            A collection of POSH plan elements.
+            
+            This collection provides the same functionality as POSH.strict.PlanElement.
+            </summary>
+        </member>
+        <member name="T:POSH.sys.strict.PlanElement">
+            <summary>
+            An element of a POSH plan.
+            </summary>
+        </member>
+        <member name="T:POSH.sys.strict.CopiableElement">
+            <summary>
+            An element that can be copied.
+            
+            Any element that is or can become the element of a drive element
+            or competence element as to be of this class or a inheriting class.
+            </summary>
+        </member>
+        <member name="T:POSH.sys.strict.ElementBase">
+             <summary>
+             A basic POSH element.
+            
+             A basic POSH element is any plan / behaviour element, like a drive,
+             a drive element, an action pattern, a sense, ...
+            
+             Each such an element has a unique numeric id, that is
+             assigned to the element upon creating it.
+            
+             This element is not used directly, but is inherited
+             by L{POSH.strict.Sense}, L{POSH.strict.Action}, and
+             L{POSH.strict.PlanElement}.
+             </summary>
+        </member>
+        <member name="T:POSH.sys.LogBase">
+            <summary>
+            Base for agent-based log messages.
+            
+            This class adds the object variable 'log' to each instance of a subclass
+            that inherits this class. This log variable is a logging object that is
+            to be used for creating log messages.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.LogBase.#ctor(System.String,POSH.sys.AgentBase,System.Object,System.Boolean)">
+            <summary>
+            Initialises the logger.
+            
+            The logger is initialised to send log messages
+            under the logging domain [AgentId].[log_name]. The 
+            name of the agent is retrieved by accessing C{agent.id}
+            variable.
+            
+            If the logger is initialised for the agent itself,
+            logName has to be set to an empty string.
+            </summary>
+            <param name="agent">A POSH agent.
+            </param>
+            <param name="logName">Name of the logging domain, "" if called
+            for the agent.</param>
+            <param name="defaultLevel">The default logging level.</param>
+        </member>
+        <member name="P:POSH.sys.LogBase.attributes">
+            <summary>
+            Returns a list of available attributes.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.strict.ElementBase.getNextId">
+            <summary>
+            Returns a unique element id.
+            This function returns an id for plan elements. At every call, 
+            the internal id counter is increased by 1.
+            </summary>
+            <returns>A unique element id.</returns>
+        </member>
+        <member name="M:POSH.sys.strict.ElementBase.#ctor(System.String,POSH.sys.strict.Agent)">
+            <summary>
+            Initialises the element, and assigns it a unique id.
+            </summary>
+            <param name="logDomain">The logging domain for the element.</param>
+            <param name="agent">The agent that uses the element.</param>
+        </member>
+        <member name="M:POSH.sys.strict.ElementBase.getName">
+            <summary>
+            Returns the name of the element.
+            
+            The name has to be set by overriding classes by setting
+            the object variable name
+            </summary>
+            <returns> The element's name.</returns>
+        </member>
+        <member name="M:POSH.sys.strict.ElementBase.ToString">
+            <summary>
+            Returns the string representation of the element.
+            </summary>
+            <returns>[Classname] [Elementname] [Id]</returns>
+        </member>
+        <member name="M:POSH.sys.strict.ElementBase.getId">
+            <summary>
+            Returns the element's id.
+            </summary>
+            <returns>The element's id.</returns>
+        </member>
+        <member name="M:POSH.sys.strict.ElementBase.ToSerialize(System.Collections.Generic.Dictionary{System.String,System.String})">
+            <summary>
+            TO convert a plan structure back intto its textual form we extract thei plan in POSH format.
+            </summary>
+            <param name="elements">The already existing elements so that duplicates can be treated more efficient.
+            The dictionary will be altered if a new compentence or actionpattern is found.</param>
+            <returns>THe posh plan representation of the element and its sub elements.
+            The return value cis a string containing the tree structure opf the plan.</returns>
+        </member>
+        <member name="E:POSH.sys.strict.ElementBase.FireEvent">
+            
+             Event Handling
+             This creates FireEvents which can be used in the Fire method to allow for execution tracking
+             an IListener needs to be used to subscribe to each plan element however
+            
+        </member>
+        <member name="M:POSH.sys.strict.CopiableElement.#ctor(System.String,POSH.sys.strict.Agent)">
+            <summary>
+            Any element that is or can become the element of a drive element
+            or competence element as to be of this class or a inheriting class.
+            
+            Initialise the element.
+            </summary>
+            <param name="logDomain">The logging domain for the element.</param>
+            <param name="agent">The agent that uses the element.</param>
+        </member>
+        <member name="M:POSH.sys.strict.CopiableElement.copy">
+            <summary>
+            Returns a reset copy of itself.
+            
+            This method returns a copy of itself, by creating a new
+            instance of itsself and replicating all state-dependent object
+            variables. If the object variables are not state-dependent,
+            they can be copied as references rather than real copies.
+            
+            This method needs to be overriddent by inheriting classes.
+            In its current implementation it raises NotImplementedError
+            </summary>
+            <returns>A copy of itsself.</returns>
+        </member>
+        <member name="M:POSH.sys.strict.PlanElement.#ctor(System.String,POSH.sys.strict.Agent)">
+            <summary>
+            An element of a POSH plan.
+            </summary>
+            <param name="logDomain">The logging domain for the element.</param>
+            <param name="agent">The agent that uses the element.</param>
+        </member>
+        <member name="M:POSH.sys.strict.PlanElement.reset">
+            <summary>
+            Resets the element.
+            
+            This method has to be overridden in inheriting classes.
+            In its default implementation is raises NotImplementedError.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.strict.PlanElement.fire">
+            <summary>
+            Fires the element and returns the result.
+            
+            The result is given as a FireResult object.
+            This method needs to be overriden by inheriting classes.
+            In its default implementation is raises NotImplementedError.
+            </summary>
+            <returns>The result of firing the element.</returns>
+        </member>
+        <member name="M:POSH.sys.strict.ElementCollection.#ctor(System.String,POSH.sys.strict.Agent)">
+            <summary>
+            A collection of POSH plan elements.
+            
+            This collection provides the same functionality as POSH.strict.PlanElement.
+            
+            Initialises the element collection.
+            </summary>
+            <param name="logDomain">The logging domain for the element collection.</param>
+            <param name="agent">The agent that uses the element collection.</param>
+        </member>
+        <member name="T:POSH.sys.strict.DriveElement">
+            <summary>
+            A drive element.
+            </summary>
+        </member>
+        <member name="T:POSH.sys.strict.Element">
+            <summary>
+            A simple POSH plan element.
+            
+            This element has besides the PlanElement an additional
+            ready-state that is queried before it is fired.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.strict.Element.#ctor(System.String,POSH.sys.strict.Agent)">
+            <summary>
+            A simple POSH plan element.
+            
+            This element has besides the L{PlanElement} an additional
+            ready-state that is queried before it is fired.
+            
+            Initialises the element.
+            </summary>
+            <param name="logDomain">The logging domain for the element.</param>
+            <param name="agent">The agent that uses the element.</param>
+        </member>
+        <member name="M:POSH.sys.strict.Element.isReady(System.Int64)">
+            <summary>
+            Returns if the element is ready to be fired.
+            
+            This method needs to be overridden by inheriting classes.
+            In its default implementation it raises NotImplementedError.
+            </summary>
+            <param name="timeStamp">The current timestamp in milliseconds.</param>
+            <returns>If the element can be fired.</returns>
+        </member>
+        <member name="M:POSH.sys.strict.DriveElement.#ctor(POSH.sys.strict.Agent,System.String,POSH.sys.strict.Trigger,POSH.sys.strict.CopiableElement,System.Int64)">
+            <summary>
+            Initialises the drive element.
+            
+            The log domain is set to [AgentName].DE.[element_name]
+            </summary>
+            <param name="agent">The element's agent.</param>
+            <param name="elementName">The name of the drive element.</param>
+            <param name="trigger">The trigger of the element.</param>
+            <param name="root">The element's root element.
+                root is either POSH.strict.Action, POSH.strict.Competence or POSH.strict.ActionPattern
+                </param>
+            <param name="maxFreq">The maximum frequency at which is element is
+                fired. The frequency is given in milliseconds between
+                invocation. A negative number disables this feature.</param>
+        </member>
+        <member name="M:POSH.sys.strict.DriveElement.reset">
+            <summary>
+            Resets the drive element to its root element,
+            and resets the firing frequency.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.strict.DriveElement.isReady(System.Int64)">
+             <summary>
+             Returns if the element is ready to be fired.
+            
+             The element is ready to be fired if its trigger is
+             satisfied and if the time since the last firing is
+             larger than the one given by C{maxFreq}. The time of the
+             last firing is determined by the timestamp given
+             to L{isReady} when it was called the last time and returned
+             True. This implies that the element has to be fired
+             every time when this method returns True.
+             </summary>
+             <param name="timeStamp">The current timestamp in milliseconds</param>
+             <returns></returns>
+        </member>
+        <member name="M:POSH.sys.strict.DriveElement.fire">
+            <summary>
+            Fires the drive element.
+            
+            This method fires the current drive element and always
+            returns None. It uses the slip-stack architecture to determine
+            the element to fire in the next step.
+            </summary>
+            <returns>The result returned is null.</returns>
+        </member>
+        <member name="T:POSH.sys.BehaviourDict">
+             <summary>
+             The behaviour dictionary.
+            
+             The behaviour dictionary is a dictionary of behaviours, its
+             actions and senses. Each of the behaviours is registered
+             with the dictionary. Subsequently, it allows looking up actions
+             and senses by their names, and returns their behaviour and
+             their actual method.
+             </summary>
+        </member>
+        <member name="M:POSH.sys.BehaviourDict.#ctor">
+            <summary>
+            Initialises the behaviour dictionary.
+            </summary>
+        </member>
+        <!-- Badly formed XML comment ignored for member "M:POSH.sys.BehaviourDict.RegisterBehaviour(POSH.sys.Behaviour)" -->
+        <member name="M:POSH.sys.BehaviourDict.getBehaviours">
+            <summary>
+            Returns a list of behaviours.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:POSH.sys.BehaviourDict.getBehaviour(System.String)">
+            <summary>
+            Returns the behaviour object with the given name.
+            </summary>
+            <param name="behaveName">The name of the behaviour.</param>
+            <returns>Return the Behaviour with the given name. 
+            If no behaviour with the given name was registered null is returned.</returns>
+        </member>
+        <member name="M:POSH.sys.BehaviourDict.getAction(System.String)">
+            <summary>
+            Returns an action by name and the linked behaviour.
+            Important: The name return is the correct unique method name inside a specific behaviour. Also The highest version of the method is returned.
+            </summary>
+            <param name="actionName">The name of a registered action as used in the plan.</param>
+            <returns>The method which  implments a given action name. If no action with the specified name was registered null is returned.</returns>
+        </member>
+        <member name="M:POSH.sys.BehaviourDict.getActionNames">
+            <summary>
+            Returns the list of available action names.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:POSH.sys.BehaviourDict.getActionBehaviour(System.String)">
+            <summary>
+            Returns the behaviour that provides the given action.
+            </summary>
+            <param name="actionName">The action that the behaviour provides</param>
+            <returns>The behaviour that provides the given action.</returns>
+        </member>
+        <member name="M:POSH.sys.BehaviourDict.getSenseBehaviour(System.String)">
+            <summary>
+            Returns the behaviour that provides the given sense.
+            </summary>
+            <param name="senseName">The sense that the behaviour provides</param>
+            <returns>The behaviour that provides the given sense.</returns>
+        </member>
+        <member name="M:POSH.sys.BehaviourDict.getSense(System.String)">
+            <summary>
+            Returns a sense by name.
+            </summary>
+            <param name="senseName">The name of a registered Sense.</param>
+            <returns>The sense with the given name.</returns>
+        </member>
+        <member name="M:POSH.sys.BehaviourDict.getSenseNames">
+            <summary>
+            Returns a list of available sense names.
+            </summary>
+            <returns>A list of sense names.</returns>
+        </member>
+        <member name="M:POSH.sys.RampActivation.#ctor(System.Int32,System.Int32,System.Int32,System.Single,System.Single,System.Int32)">
+            <summary>
+            Class impementing ERGo, a ramp based activation function to monitor the execution of parallel behaviours
+            </summary>
+            <param name="activation"></param>
+            <param name="stickiness"></param>
+            <param name="lower"></param>
+            <param name="increment"></param>
+            <param name="urgency_multiplier"></param>
+        </member>
+        <member name="T:POSH.sys.scheduled.FireResult">
+            <summary>
+            The result of firing a plan element.
+            
+            This result determines two things:
+                
+                - if we want to continue executing this part of the plan or want to
+                  return to the root.
+                
+                - the plan element to execute in the next step, given that we are
+                  continuing to execute the current plan of the step.
+            
+            Continuing the execution means to either to fire the
+            same element in the next execution step, or to descend further
+            in the plan tree and fire the next element in that tree.
+            The next element to execute also needs to be given. If this element
+            is set to None, the element to execute stays the same. Otherwise
+            the given element is copied, reset, and given as the next element.
+            
+            If we are not continuing the execution of the current part of the
+            plan, the currently fired drive element returns to the root of the plan.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.scheduled.FireResult.#ctor(System.Boolean,POSH.sys.scheduled.CopiableElement)">
+            <summary>
+            Initialises the result of firing an element.
+            
+            For a more detailed description of the arguments, read the
+            class documentation.
+            </summary>
+            <param name="continueExecution">If we want to continue executing the current
+            part of the plan.</param>
+            <param name="nextElement">The next plan element to fire.</param>
+        </member>
+        <member name="M:POSH.sys.scheduled.FireResult.continueExecution">
+            <summary>
+            Returns if we want to continue execution the current part of the
+            plan.
+            </summary>
+            <returns>If we want to continue execution.</returns>
+        </member>
+        <member name="M:POSH.sys.scheduled.FireResult.nextElement">
+            <summary>
+            Returns the element to fire at the next step.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:POSH.sys.scheduled.ElementCollection">
+            <summary>
+            A collection of POSH plan elements.
+            
+            This collection provides the same functionality as POSH.scheduled.PlanElement.
+            </summary>
+        </member>
+        <member name="T:POSH.sys.scheduled.PlanElement">
+            <summary>
+            An element of a POSH plan.
+            </summary>
+        </member>
+        <member name="T:POSH.sys.scheduled.CopiableElement">
+            <summary>
+            An element that can be copied.
+            
+            Any element that is or can become the element of a drive element
+            or competence element as to be of this class or a inheriting class.
+            </summary>
+        </member>
+        <member name="T:POSH.sys.scheduled.ElementBase">
+             <summary>
+             A basic POSH element.
+            
+             A basic POSH element is any plan / behaviour element, like a drive,
+             a drive element, an action pattern, a sense, ...
+            
+             Each such an element has a unique numeric id, that is
+             assigned to the element upon creating it.
+            
+             This element is not used directly, but is inherited
+             by L{POSH.scheduled.Sense}, L{POSH.scheduled.Action}, and
+             L{POSH.scheduled.PlanElement}.
+             </summary>
+        </member>
+        <member name="M:POSH.sys.scheduled.ElementBase.getNextId">
+            <summary>
+            Returns a unique element id.
+            This function returns an id for plan elements. At every call, 
+            the internal id counter is increased by 1.
+            </summary>
+            <returns>A unique element id.</returns>
+        </member>
+        <member name="M:POSH.sys.scheduled.ElementBase.#ctor(System.String,POSH.sys.scheduled.Agent)">
+            <summary>
+            Initialises the element, and assigns it a unique id.
+            </summary>
+            <param name="logDomain">The logging domain for the element.</param>
+            <param name="agent">The agent that uses the element.</param>
+        </member>
+        <member name="M:POSH.sys.scheduled.ElementBase.getName">
+            <summary>
+            Returns the name of the element.
+            
+            The name has to be set by overriding classes by setting
+            the object variable name
+            </summary>
+            <returns> The element's name.</returns>
+        </member>
+        <member name="M:POSH.sys.scheduled.ElementBase.ToString">
+            <summary>
+            Returns the string representation of the element.
+            </summary>
+            <returns>[Classname] [Elementname]</returns>
+        </member>
+        <member name="M:POSH.sys.scheduled.ElementBase.getId">
+            <summary>
+            Returns the element's id.
+            </summary>
+            <returns>The element's id.</returns>
+        </member>
+        <member name="M:POSH.sys.scheduled.CopiableElement.#ctor(System.String,POSH.sys.scheduled.Agent)">
+            <summary>
+            Any element that is or can become the element of a drive element
+            or competence element as to be of this class or a inheriting class.
+            
+            Initialise the element.
+            </summary>
+            <param name="logDomain">The logging domain for the element.</param>
+            <param name="agent">The agent that uses the element.</param>
+        </member>
+        <member name="M:POSH.sys.scheduled.CopiableElement.copy">
+            <summary>
+            Returns a reset copy of itself.
+            
+            This method returns a copy of itself, by creating a new
+            instance of itsself and replicating all state-dependent object
+            variables. If the object variables are not state-dependent,
+            they can be copied as references rather than real copies.
+            
+            This method needs to be overriddent by inheriting classes.
+            In its current implementation it raises NotImplementedError
+            </summary>
+            <returns>A copy of itsself.</returns>
+        </member>
+        <member name="M:POSH.sys.scheduled.PlanElement.#ctor(System.String,POSH.sys.scheduled.Agent)">
+            <summary>
+            An element of a POSH plan.
+            </summary>
+            <param name="logDomain">The logging domain for the element.</param>
+            <param name="agent">The agent that uses the element.</param>
+        </member>
+        <member name="M:POSH.sys.scheduled.PlanElement.reset">
+            <summary>
+            Resets the element.
+            
+            This method has to be overridden in inheriting classes.
+            In its default implementation is raises NotImplementedError.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.scheduled.PlanElement.fire">
+            <summary>
+            Fires the element and returns the result.
+            
+            The result is given as a FireResult object.
+            This method needs to be overriden by inheriting classes.
+            In its default implementation is raises NotImplementedError.
+            </summary>
+            <returns>The result of firing the element.</returns>
+        </member>
+        <member name="M:POSH.sys.scheduled.ElementCollection.#ctor(System.String,POSH.sys.scheduled.Agent)">
+            <summary>
+            A collection of POSH plan elements.
+            
+            This collection provides the same functionality as POSH.scheduled.PlanElement.
+            
+            Initialises the element collection.
+            </summary>
+            <param name="logDomain">The logging domain for the element collection.</param>
+            <param name="agent">The agent that uses the element collection.</param>
+        </member>
+        <member name="T:POSH.sys.scheduled.DriveCollection">
+            <summary>
+            Implementation of DriveCollection
+            
+            A drive collection, containing drive priority elements.
+            
+            A POSH.scheduled.DriveCollection contains several
+            POSH.scheduled.DrivePriorityElement s
+            that contains several POSH.scheduled.DriveElement s. Upon firing a drive
+            collection, either the goal is satisfied, or either of the drive
+            priority elements needs to be fired successfully. Otherwise, the
+            drive fails. The drive priority elements are tested in order or
+            their priority. A drive priority element fires successfully if one
+            of its drive elements is ready and can be fired.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.scheduled.DriveCollection.#ctor(POSH.sys.scheduled.Agent,System.String,POSH.sys.scheduled.DrivePriorityElement[],POSH.sys.scheduled.Trigger)">
+            <summary>
+            Initialises the drive collection.
+            
+            The log domain is set to [AgentId].DC.[collection_name]
+            
+            If no goal is given (goal = None), then it can never be satisfied.
+            </summary>
+            <param name="agent">The collection's agent.</param>
+            <param name="collectionName">The name of the drive collection.</param>
+            <param name="priorityElements">The drive elements in order of their
+                    priority, starting with the highest priority.</param>
+            <param name="goal">The goal of the drive collection.</param>
+        </member>
+        <member name="M:POSH.sys.scheduled.DriveCollection.reset">
+            <summary>
+            Resets all the priority elements of the drive collection.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.scheduled.DriveCollection.fire">
+            <summary>
+            Fires the drive collection.
+            
+            This method first checks if the goal (if not None) is met. If
+            that is the case, then FireResult(False, self) is
+            returned. Otherwise it goes through the list of priority
+            elements until the first one was fired successfully (returning
+            something else than None). In that case, FireResult(True,
+            None) is returned. If none of the priority elements were
+            successful, FireResult(False, None) is returned, indicating a
+            failing of the drive collection.
+            
+            To summarise:
+                - FireResult(True, None): drive element fired
+                - FireResult(False, self): goal reached
+                - FireResult(False, None): drive failed
+            </summary>
+            <returns>The result of firing the drive.</returns>
+        </member>
+        <member name="M:POSH.sys.scheduled.DriveCollection.copy">
+            <summary>
+            Is never supposed to be called and raises an error.
+            </summary>
+            <returns>DriveCollection.copy() is never supposed to be called</returns>
+        </member>
+        <member name="T:POSH.sys.strict.Competence">
+            <summary>
+            A Competence contains a list of CompetencePriorityElements that
+            each contain some CompetenceElements. Upon firing a competence,
+            the competence finds the first element in the competence priority list
+            that executes successfully. A competence priority list executes
+            successfully if at least one of its elements is ready to fire and is
+            fired.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.strict.Competence.#ctor(POSH.sys.strict.Agent,System.String,POSH.sys.strict.CompetencePriorityElement[],POSH.sys.strict.Trigger)">
+            <summary>
+            A POSH competence, containing competence priority elements.
+            
+            Initialises the competence.
+            
+            If no goal is given, then the goal will never be reached.
+            
+            The log domain is set to "[AgentId].C.[competence_name]".
+            </summary>
+            <param name="agent">The competence's agent.</param>
+            <param name="competenceName">The name of the competence.</param>
+            <param name="priorityElements">The priority elements of the competence,
+                    in their order of priority.</param>
+            <param name="goal">The goal of the competence.</param>
+        </member>
+        <member name="M:POSH.sys.strict.Competence.reset">
+            <summary>
+            Resets all the competence's priority elements.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.strict.Competence.fire">
+            <summary>
+            Fires the competence.
+            
+            This method first checks if the competence's goal is satisfied
+            (if the goal is not None). If that is the case, then it
+            returns FireResult(False, None). Otherwise it fires the
+            priority elements one by one. On the first successful firing
+            of a competence priority element, the method returns the
+            result of the priority element. If no priority element fired
+            successfully, then FireResult(False, None) is returned.
+            </summary>
+            <returns>The result of firing an element, or
+                    FireResult(False, None)</returns>
+        </member>
+        <member name="M:POSH.sys.strict.Competence.copy">
+            <summary>
+            Returns a reset copy of itsself.
+            
+            This method creates a copy of itsself that has a copy of the
+            competence priority elements but is otherwise equal.
+            </summary>
+            <returns>A reset copy of itself.</returns>
+        </member>
+        <member name="M:POSH.sys.strict.Competence.setElements(POSH.sys.strict.CompetencePriorityElement[])">
+            <summary>
+            Sets the list of priority elements of the competence.
+            
+            Calling this method also resets the competence.
+            </summary>
+            <param name="elements"></param>
+        </member>
+        <member name="T:POSH.sys.events.POSHListener">
+            <summary>
+            A POSHListner listens for specific events to ocure and tracks them in the background. The Listener is used for analysing the traversal of the plan and for debugging. 
+            </summary>
+        </member>
+        <member name="M:POSH.sys.events.POSHListener.#ctor">
+            <summary>
+            A POSHListner listens for specific events to ocure and tracks them in the background. The Listener is used for analysing the traversal of the plan and for debugging. 
+            </summary>
+        </member>
+        <member name="T:POSH.sys.strict.TimerBase">
+            <summary>
+            An agent timer base class. 
+            This class defines the interface of an agent timer class.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.strict.TimerBase.#ctor">
+            <summary>
+            This method resets the timer.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.strict.TimerBase.CurrentTimeStamp">
+            <summary>
+            Returns the current timestamp in milliseconds.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.strict.TimerBase.Reset">
+            <summary>
+            Resetting the timer sets its internal starting time to 0. 
+            All calls to L{time} after calling this method return the time 
+            that has passed since the this method has been classed.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.strict.TimerBase.Time">
+            <summary>
+            Returns the current time in milliseconds.
+            <returns>
+            The current time in milliseconds using the long Data type
+            </returns>
+            </summary>
+        </member>
+        <member name="M:POSH.sys.strict.TimerBase.LoopEnd">
+            <summary>
+            To be called at the end of each loop.
+            
+             For a stepped timer, this method increases the time. For a 
+             real-time timer, this method does nothing.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.strict.TimerBase.LoopWait">
+            <summary>
+            Manages the loop frequency.
+            
+             This method is supposed to be called at the end of each loop
+             to adjust the loop frequency. It waits a certain time and then
+             returns, to make the loop run at a certain frequency. Hence,
+             it holds statistics about the time inbetween two calls of this
+             methods and adjusts the wait time to achieve the required time
+             difference.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.strict.TimerBase.SetLoopFreq(System.Int64)">
+            <summary>
+            Sets the new loop frequency and resets the timer.
+            This method should only affect real-time timers.
+            <value name="loopFreq">
+            The loop frequence, given by the time in milliseconds that one loop should take.
+            </value>
+            </summary>
+        </member>
+        <member name="T:POSH.sys.strict.SteppedTimer">
+            <summary>
+            A stepped agent timer.
+            
+            This timer is a stepped timer, which is to be used if the agent is
+            stepped, i.e. controlled from and outside controller. The timer
+            starts at time 0 and increases the time every time that L{loopEnd} is
+            called. It does not provide loop timing, as that wouldn't make any
+            sense if the agent is controlled from the outside.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.strict.SteppedTimer.Time">
+            <summary>
+            Returns the current state of the internal timer.
+            </summary>
+            <returns>current time</returns>
+        </member>
+        <member name="M:POSH.sys.strict.SteppedTimer.LoopEnd">
+            <summary>
+            Increases the internal timer by 1.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.strict.SteppedTimer.LoopWait">
+            <summary>
+            Does nothing, as the stepped timer does not provide loop control.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.strict.SteppedTimer.SetLoopFreq(System.Int64)">
+            <summary>
+            Does nothing, as the stepped timer does not provide loop control.
+            </summary>
+            <param name="loopFreq"> is ignored
+            </param>
+        </member>
+        <member name="T:POSH.sys.strict.RealTimeTimer">
+            <summary>
+            An agent real-time timer.
+            
+            The real-time timer relies on the system clock for its timing. On
+            initialising and resetting the timer, its internal clock is set to
+            0, and any call to L{time} returns the time that passed since the
+            timer was resetted last. The timer provides loop frequency
+            control.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.strict.RealTimeTimer.#ctor(System.Int64)">
+            <summary>
+            Resets the timer and sets the loop frequency.
+            <param name="loopFreq">
+            The wanted loop frequency, given by the time in
+            milliseconds that one loop should take.
+            </param>
+             The loop frequency is the one used by L{loopWait}.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.strict.RealTimeTimer.Reset">
+            <summary>
+            Resets the timer.
+            
+             All future calls to L{time} return the time that passed since this
+             method was called last.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.strict.RealTimeTimer.Time">
+            <summary>
+            Returns the time passed since the last call of L{reset}.
+            <returns>
+            Time passed in milliseconds.
+            </returns>
+            </summary>
+        </member>
+        <member name="M:POSH.sys.strict.RealTimeTimer.LoopEnd">
+            <summary>
+            To be called at the end of each loop.
+            
+             Does nothing, as the timing is provided by the system clock.
+            </summary>
+        </member>
+        <!-- Badly formed XML comment ignored for member "M:POSH.sys.strict.RealTimeTimer.LoopWait" -->
+        <member name="M:POSH.sys.strict.RealTimeTimer.SetLoopFreq(System.Int64)">
+            <summary>
+            Sets the new loop frequency and resets the timer.
+            <value name="loopFreq">
+            The loop frequence, given by the time in milliseconds that one loop should take.
+            </value>
+            </summary>
+        </member>
+        <member name="T:POSH.sys.strict.POSHSense">
+            <summary>
+            A sense / sense-act as a thin wrapper around a behaviour's
+            sense / sense-act method.
+            </summary>
+        </member>
+        <!-- Badly formed XML comment ignored for member "M:POSH.sys.strict.POSHSense.#ctor(POSH.sys.strict.Agent,System.String,System.String,System.String)" -->
+        <member name="M:POSH.sys.strict.POSHSense.fire">
+            <summary>
+            Activates the sense and returns its result.
+            </summary>
+            <returns>The result of the sense.</returns>
+        </member>
+        <member name="M:POSH.sys.strict.POSHSense.copy">
+            <summary>
+            Returns itsself.
+            
+            This method does NOT return a copy of the action as the action
+            does not have an internal state and therefore doesn't need to
+            be copied.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:POSH.sys.strict.Agent">
+            <summary>
+            Implementation of a POSH Agent.
+            </summary>
+        </member>
+        <member name="T:POSH.sys.AgentBase">
+            <summary>
+            Base class for POSH agent.
+            
+            This class is not to be instantiated directly. Instead, the strict or
+            scheduled children should be used.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.AgentBase.#ctor(System.String,System.String,System.Collections.Generic.Dictionary{POSH.sys.Tuple{System.String,System.String},System.Object},POSH.sys.World)">
+            <summary>
+            Initialises the agent to use the given library and plan.
+            
+            The plan has to be given as the plan name without the '.lap' extension.
+            The attributes are the ones that are assigned to the behaviours
+            when they are initialised. The world is the one that can be accessed
+            by the behaviours by the L{AgentBase.getWorld} method.
+            
+            Note that when the behaviours are loaded from the given library, then
+            they are reflected onto the agent object. That means, given that
+            there is a behaviour called 'bot', then it can be accessed from another
+            behaviour either by self.agent.getBehaviour("bot"), or by
+            self.agent.bot. Consequently, behaviour names that clash with already
+            existing agent attributes cause an AttributeError to be raise upon
+            initialising the behaviours.
+            
+            The attributes are to be given in the same format as for the
+            method L{AgentBase.assignAttributes}.
+            </summary>
+            <param name="library">The behaviour library to use.</param>
+            <param name="plan">The plan to use (without the '.lap' ending).</param>
+            <param name="attributes">The attributes to be assigned to the behaviours</param>
+            <param name="world"></param>
+        </member>
+        <member name="M:POSH.sys.AgentBase.LoadBehaviours">
+            <summary>
+            Returns all behaviours of the agent's library as a behaviour
+            dictionary.
+            </summary>
+            <returns>Behaviour dictionary with all behaviours in the library</returns>
+        </member>
+        <member name="M:POSH.sys.AgentBase.ReflectBehaviours">
+            <summary>
+            Reflect the agent objects onto the agent.
+            
+            This action is performed for all behaviour objects in the agent's
+            behaviour dictionary. If an attribute with the same name already
+            exists, an error is raised.
+            </summary>
+            
+        </member>
+        <member name="M:POSH.sys.AgentBase.getWorld">
+            <summary>
+            Returns the world object.
+            
+            The returned world object is the one that was given to the agent
+            on construction.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:POSH.sys.AgentBase.getBehaviourDict">
+            <summary>
+            Returns the agent's behaviour dictionary.
+            </summary>
+            <returns>The agent's behaviour dictionary.</returns>
+        </member>
+        <member name="M:POSH.sys.AgentBase.getBehaviours">
+            <summary>
+            Returns the agent's behaviour objects.
+            </summary>
+            <returns>List of behaviour objects.</returns>
+        </member>
+        <member name="M:POSH.sys.AgentBase.getBehaviour(System.String)">
+            <summary>
+            Returns the agent's behaviour object with the given name.
+            </summary>
+            <param name="behaviourName">The name of the behaviour.</param>
+            <returns>The behaviour for the supplied name or null.</returns>
+        </member>
+        <member name="M:POSH.sys.AgentBase.AssignAttributes(System.Collections.Generic.Dictionary{POSH.sys.Tuple{System.String,System.String},System.Object})">
+            <summary>
+            Assigns the given attributes to the behaviours.
+            
+            The attributes are given as a dictionary that maps the tuple
+            (behaviour_name, attribute_name) into the assigned values.
+            If a behaviour with the given name is not found, an error is raised.
+            </summary>
+            <param name="attributes">attributes that are to be assigned to behaviours
+            dictionary (behaviour_name, attribute_name) -> value</param>
+        </member>
+        <member name="M:POSH.sys.AgentBase.SetRNG(System.Random)">
+            <summary>
+            Sets the random number generator of the agent.
+            
+            Whenever the random number generator is set using
+            this method, it is probabgated to all registered
+            behaviours.
+            </summary>
+            <param name="rng">A random number generator.</param>
+        </member>
+        <member name="M:POSH.sys.AgentBase.Reset(System.Int32)">
+            <summary>
+            Resets the agent. Should be called just before running the main loop.
+            
+            The method returns if the reset was successful. It first checks if
+            there are any behaviours to reset, and then resets all of them. It then
+            waits until each of them is ready, by calling checkError(). If any of
+            these fail, then the method returns False, otherwise it returns True.
+            
+            The waittime is the time allowed until the behaviours are getting
+            ready. It is the same as given to checkError(). By default, it is
+            set to 20 seconds.
+            </summary>
+            <param name="waitTime">Timout waiting for behaviours (see L{checkError()}).</param>
+            <returns></returns>
+        </member>
+        <member name="M:POSH.sys.AgentBase.CheckError(System.Int32)">
+            <summary>
+            Returns the number of behaviours that report an error.
+            
+            This method checks the state of the behaviours, and returns True if
+            they are ready, and False otherwise. The method waits a maximum time,
+            specified by 'waittime' for the behaviours to become ready. The
+            state of a behaviour is checked by calling its checkError() methods.
+            
+            'waittime' is specified in 10ths of a second. If waittime = 20, for
+            example, then the method waits at most 2 seconds. A waittime of 0
+            requires the behaviours to be available immediately.
+            </summary>
+            <param name="waitTime">Number of 10ths of seconds to wait for behaviours
+            to be ready.</param>
+            <returns>Number of behaviours that are not ready.</returns>
+        </member>
+        <member name="M:POSH.sys.AgentBase.StartLoop">
+            <summary>
+            Start the real-time loop, repeatedly firing the drive collection.
+            
+            This method resets the agent by calling L{reset()} and then
+            spawns a separate thread (L{_loop_thread}) that repeateadly
+            fires the drive collection until the drive collection
+            fails, the goal is reached, or L{stopLoop} is called.
+            </summary>
+            <returns>True if the loop was started, and False if it is already
+                running, or the reset failed.</returns>
+        </member>
+        <member name="M:POSH.sys.AgentBase.PauseLoop">
+            <summary>
+            Pauses the real-time loop, or continues it.
+            
+            If this method is called when the real-time loop is not
+            paused, then it pauses it and returns True. If the real-time
+            loop is paused, then the loop is continued, and False is
+            returned. If the real-time loop is not running, then an
+            exception is thrown.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:POSH.sys.AgentBase.StopLoop">
+            <summary>
+            Stops the real-time loop.
+            
+            This method can also be called when the loop is paused. If it is
+            called when the loop is not running, an exception is thrown.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.AgentBase.LoopStatus">
+            <summary>
+            Returns the status of the real-time loop.
+            
+            The state is returned as the tuple (isRunning, isPaused). isRunning
+            is only true if the loop is currently executed. If this is the case,
+            then isPaused indicates if the loop is currently paused.
+            </summary>
+            <returns>Returns the state of the Tread in the form Tuple(isRunning, isPaused).</returns>
+        </member>
+        <member name="M:POSH.sys.AgentBase.ExitPrepare">
+            <summary>
+            Prepares the agent to exit.
+            
+            This method stops the loop if it is running and calls exitPrepare() of
+            all behaviours.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.AgentBase.FollowDrive">
+            <summary>
+            Performes one loop through the drive collection.
+            
+            This method needs to be overriden by inheriting classes.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.AgentBase.LoadPlan(System.String)">
+            <summary>
+            Needs to be overridden to load the plan and create the data
+            structures.
+            
+            It is called form the constructor after the behaviours have been
+            loaded and their initial attributes have been assigned.
+            </summary>
+            <param name="planFile"></param>
+            <returns></returns>
+        </member>
+        <member name="M:POSH.sys.AgentBase.LoopThreadWrapper">
+            <summary>
+            A wrapper for the _loopThread() method.
+            
+            It calles loopThread(), and sets the object variables
+            _execLoop and _loopPause to the correct values after
+            loopThread() returns.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.AgentBase.LoopThread">
+            <summary>
+            The loop thread, started by startLoop.
+            
+            This method needs to be overridden by inheriting classes.
+            If needs to check the status of the object variables _execLoop and
+            _loopPause and react to them.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.AgentBase.RegisterListener(POSH.sys.events.IListener)">
+            <summary>
+            Register an IListener to the agent so that you can listen to all events generated during plan execution
+            </summary>
+            <param name="listener"></param>
+        </member>
+        <member name="E:POSH.sys.AgentBase.FireEvent">
+            
+             Event Handling
+             This creates FireEvents which can be used in the Fire method to allow for execution tracking
+             an IListener needs to be used to subscribe to each plan element however
+            
+        </member>
+        <member name="P:POSH.sys.AgentBase.linkedPlanName">
+            <summary>
+            The name of the POSH plan which is used for this agent.
+            </summary>
+        </member>
+        <!-- Badly formed XML comment ignored for member "M:POSH.sys.strict.Agent.setTimer(POSH.sys.strict.TimerBase)" -->
+        <member name="M:POSH.sys.strict.Agent.getTimer">
+            <summary>
+            Returns the currently used timer.
+            </summary>
+            <returns>The currently used timer.</returns>
+        </member>
+        <!-- Badly formed XML comment ignored for member "M:POSH.sys.strict.Agent.setLoopFreq(System.Int64)" -->
+        <member name="M:POSH.sys.strict.Agent.Reset(System.Int32)">
+             <summary>
+             Checks if the behaviours are ready and resets the agent's timer.
+             
+             This method should be called just before running the main loop.
+            
+             The waittime is the time allowed until the behaviours are getting
+             ready. It is the same as given to checkError(). By default, it is
+             set to 20 seconds.
+             </summary>
+             <param name="waitTime">Timout waiting for behaviours (see L{checkError()}).</param>
+             <returns>If the reset was successful.</returns>
+        </member>
+        <member name="M:POSH.sys.strict.Agent.FollowDrive">
+            <summary>
+            Performes one loop through the drive collection.
+                    
+            This method takes the first triggering drive element and either
+            descends further down in the competence tree, or performs
+            the drive's current action.
+            
+            It returns either DRIVE_WON if the drive collection's goal was
+            reached, DRIVE_LOST if no drive triggered, or DRIVE_FOLLOWED if
+            the goal wasn't reached and a drive triggered.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:POSH.sys.strict.Agent.LoopThread">
+            <summary>
+            The loop thread, started by L{startLoop}.
+            
+            This thread controls how L{followDrive} is called.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.strict.Agent.LoadPlan(System.String)">
+            <summary>
+            Loads the plan and creates the drive collection tree.
+            
+            The method parses the plan file, and then uses the plan builder to
+            build the drive collection tree.
+            </summary>
+            <param name="planFile">Filename of the plan file that is loaded.</param>
+            <returns></returns>
+        </member>
+        <member name="T:POSH.sys.strict.ActionPattern">
+            <summary>
+            Implementation of an ActionPattern.
+            </summary>
+        </member>
+        <!-- Badly formed XML comment ignored for member "M:POSH.sys.strict.ActionPattern.#ctor(POSH.sys.strict.Agent,System.String,POSH.sys.strict.CopiableElement[])" -->
+        <member name="M:POSH.sys.strict.ActionPattern.reset">
+            <summary>
+            Resets the action pattern.
+            
+            This method sets the action pattern to fire the
+            first action of the pattern upon the next call to L{fire}.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.strict.ActionPattern.fire">
+            <summary>
+            Fires the action pattern.
+            
+            This method fires the current action / sense / sense-act or
+            competence of the pattern. In case of firing an action / sense
+            / sense-act, the method points to the next element in the
+            pattern and returns FireResult(True, None) if the current
+            action / sense / sense-act was successful (i.e. evaluated to
+            True) and not the last action in the sequence, in which case
+            it returns FireResult(False, None) and resets the action
+            pattern.
+            
+            If the current element is a competence, then competence is
+            returned as the next element by returning
+            FireResult(True, competence), and the action pattern is
+            reset.
+            </summary>
+            <returns>The result of firing the action pattern.</returns>
+        </member>
+        <member name="M:POSH.sys.strict.ActionPattern.copy">
+             <summary>
+             Returns a reset copy of itsself.
+            
+             This method returns a copy of itsself, and calls L{reset}
+             on it.
+             </summary>
+             <returns>A reset copy of itsself.</returns>
+        </member>
+        <member name="M:POSH.sys.strict.ActionPattern.SetElements(POSH.sys.strict.CopiableElement[])">
+            <summary>
+            Sets the elements of an action pattern.
+            
+            Calling this method also resets the action pattern.
+            </summary>
+            <param name="elements">The list of elements of the action patterns. 
+                    A sequence of Actions. An additional Competence can be the
+                    last Element of the ActionPattern.</param>
+        </member>
+        <member name="T:POSH.sys.scheduled.DriveElement">
+            <summary>
+            A drive element.
+            </summary>
+        </member>
+        <member name="T:POSH.sys.scheduled.Element">
+            <summary>
+            A simple POSH plan element.
+            
+            This element has besides the PlanElement an additional
+            ready-state that is queried before it is fired.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.scheduled.Element.#ctor(System.String,POSH.sys.scheduled.Agent)">
+            <summary>
+            A simple POSH plan element.
+            
+            This element has besides the L{PlanElement} an additional
+            ready-state that is queried before it is fired.
+            
+            Initialises the element.
+            </summary>
+            <param name="logDomain">The logging domain for the element.</param>
+            <param name="agent">The agent that uses the element.</param>
+        </member>
+        <member name="M:POSH.sys.scheduled.Element.isReady(System.Int64)">
+            <summary>
+            Returns if the element is ready to be fired.
+            
+            This method needs to be overridden by inheriting classes.
+            In its default implementation it raises NotImplementedError.
+            </summary>
+            <param name="timeStamp">The current timestamp in milliseconds.</param>
+            <returns>If the element can be fired.</returns>
+        </member>
+        <member name="M:POSH.sys.scheduled.DriveElement.#ctor(POSH.sys.scheduled.Agent,System.String,POSH.sys.scheduled.Trigger,System.Object,System.Int64)">
+            <summary>
+            Initialises the drive element.
+            
+            The log domain is set to [AgentName].DE.[element_name]
+            </summary>
+            <param name="agent">The element's agent.</param>
+            <param name="elementName">The name of the drive element.</param>
+            <param name="trigger">The trigger of the element.</param>
+            <param name="root">The element's root element.
+                root is either POSH.scheduled.Action, POSH.scheduled.Competence or POSH.scheduled.ActionPattern
+                </param>
+            <param name="maxFreq">The maximum frequency at which is element is
+                fired. The frequency is given in milliseconds between
+                invocation. A negative number disables this feature.</param>
+        </member>
+        <member name="M:POSH.sys.scheduled.DriveElement.reset">
+            <summary>
+            Resets the drive element to its root element,
+            and resets the firing frequency.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.scheduled.DriveElement.isReady(System.Int64)">
+             <summary>
+             Returns if the element is ready to be fired.
+            
+             The element is ready to be fired if its trigger is
+             satisfied and if the time since the last firing is
+             larger than the one given by C{maxFreq}. The time of the
+             last firing is determined by the timestamp given
+             to L{isReady} when it was called the last time and returned
+             True. This implies that the element has to be fired
+             every time when this method returns True.
+             </summary>
+             <param name="timeStamp">The current timestamp in milliseconds</param>
+             <returns></returns>
+        </member>
+        <member name="M:POSH.sys.scheduled.DriveElement.fire">
+            <summary>
+            Fires the drive element.
+            
+            This method fires the current drive element and always
+            returns None. It uses the slip-stack architecture to determine
+            the element to fire in the next step.
+            </summary>
+            <returns>The result returned is null.</returns>
+        </member>
+        <member name="T:POSH.sys.scheduled.ActionPattern">
+            <summary>
+            Implementation of an ActionPattern.
+            </summary>
+        </member>
+        <!-- Badly formed XML comment ignored for member "M:POSH.sys.scheduled.ActionPattern.#ctor(POSH.sys.scheduled.Agent,System.String,POSH.sys.scheduled.CopiableElement[])" -->
+        <member name="M:POSH.sys.scheduled.ActionPattern.reset">
+            <summary>
+            Resets the action pattern.
+            
+            This method sets the action pattern to fire the
+            first action of the pattern upon the next call to L{fire}.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.scheduled.ActionPattern.fire">
+            <summary>
+            Fires the action pattern.
+            
+            This method fires the current action / sense / sense-act or
+            competence of the pattern. In case of firing an action / sense
+            / sense-act, the method points to the next element in the
+            pattern and returns FireResult(True, None) if the current
+            action / sense / sense-act was successful (i.e. evaluated to
+            True) and not the last action in the sequence, in which case
+            it returns FireResult(False, None) and resets the action
+            pattern.
+            
+            If the current element is a competence, then competence is
+            returned as the next element by returning
+            FireResult(True, competence), and the action pattern is
+            reset.
+            </summary>
+            <returns>The result of firing the action pattern.</returns>
+        </member>
+        <member name="M:POSH.sys.scheduled.ActionPattern.copy">
+             <summary>
+             Returns a reset copy of itsself.
+            
+             This method returns a copy of itsself, and calls L{reset}
+             on it.
+             </summary>
+             <returns>A reset copy of itsself.</returns>
+        </member>
+        <member name="M:POSH.sys.scheduled.ActionPattern.setElements(POSH.sys.scheduled.CopiableElement[])">
+            <summary>
+            Sets the elements of an action pattern.
+            
+            Calling this method also resets the action pattern.
+            </summary>
+            <param name="elements">The list of elements of the action patterns. 
+                    A sequence of Actions. An additional Competence can be the
+                    last Element of the ActionPattern.</param>
+        </member>
+        <member name="T:POSH.Properties.Resources">
+            <summary>
+              A strongly-typed resource class, for looking up localized strings, etc.
+            </summary>
+        </member>
+        <member name="P:POSH.Properties.Resources.ResourceManager">
+            <summary>
+              Returns the cached ResourceManager instance used by this class.
+            </summary>
+        </member>
+        <member name="P:POSH.Properties.Resources.Culture">
+            <summary>
+              Overrides the current thread's CurrentUICulture property for all
+              resource lookups using this strongly typed resource class.
+            </summary>
+        </member>
+        <member name="T:POSH.sys.strict.Trigger">
+            <summary>
+            A conjunction of senses and sense-acts, acting as a trigger.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.strict.Trigger.#ctor(POSH.sys.strict.Agent,POSH.sys.strict.POSHSense[])">
+            <summary>
+            Initialises the trigger.
+            
+            The log domain is set to [Agent].T.[senseName1+senseName2+...]
+            </summary>
+            <param name="agent">The agent that uses the trigger.</param>
+            <param name="senses">The list of senses and sense-acts for the trigger.</param>
+        </member>
+        <member name="M:POSH.sys.strict.Trigger.fire">
+            <summary>
+            Fires the trigger.
+            
+            The trigger returns True of all senses/sense-acts of the
+            trigger evaluate to True.
+            </summary>
+            <returns>If all the senses/sense-acts evaluate to True.</returns>
+        </member>
+        <member name="T:POSH.sys.scheduled.CompetencePriorityElement">
+            <summary>
+            A competence priority element, containing competence elements.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.scheduled.CompetencePriorityElement.#ctor(POSH.sys.scheduled.Agent,System.String,POSH.sys.scheduled.CompetenceElement[])">
+            <summary>
+            Initialises the competence priority element.
+            
+            The log domain is set to [AgentName].CP.[competence_name]
+            </summary>
+            <param name="agent">The element's agent.</param>
+            <param name="CompetenceName">The name of the competence.</param>
+            <param name="elements">The set of competence elements of the
+                    priority element.</param>
+        </member>
+        <member name="M:POSH.sys.scheduled.CompetencePriorityElement.reset">
+            <summary>
+            Resets all its competence elements.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.scheduled.CompetencePriorityElement.fire">
+            <summary>
+            Fires the competence priority element.
+            
+            This method goes through its list of competence elements
+            and fires the first one that is ready. In that case,
+            the result of the competence element is returned. Otherwise,
+            it returns FireResult(True, None) (this can never be returned
+            by a competence element and is therefore uniquely identifyable).
+            </summary>
+            <returns>The result of firing the competence priority element.</returns>
+        </member>
+        <member name="M:POSH.sys.scheduled.CompetencePriorityElement.copy">
+            <summary>
+            Returns a reset copy of itsself.
+            
+            This method creates a copy of itsself that has a copy of the
+            reset priority elements but is otherwise equal.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:POSH.sys.scheduled.Trigger">
+            <summary>
+            A conjunction of senses and sense-acts, acting as a trigger.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.scheduled.Trigger.#ctor(POSH.sys.scheduled.Agent,POSH.sys.scheduled.POSHSense[])">
+            <summary>
+            Initialises the trigger.
+            
+            The log domain is set to [Agent].T.[senseName1+senseName2+...]
+            </summary>
+            <param name="agent">The agent that uses the trigger.</param>
+            <param name="senses">The list of senses and sense-acts for the trigger.</param>
+        </member>
+        <member name="M:POSH.sys.scheduled.Trigger.fire">
+            <summary>
+            Fires the trigger.
+            
+            The trigger returns True of all senses/sense-acts of the
+            trigger evaluate to True.
+            </summary>
+            <returns>If all the senses/sense-acts evaluate to True.</returns>
+        </member>
+        <member name="T:POSH.sys.strict.POSHAction">
+            <summary>
+            Implementation of an Action.
+            
+            An action as a thin wrapper around a behaviour's action method.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.strict.POSHAction.#ctor(POSH.sys.strict.Agent,System.String)">
+            <summary>
+            Picks the given action from the given agent.
+            
+            The method uses the agent's behaviour dictionary to get the
+            action method.
+            
+            The log domain is set to "[AgentId].Action.[action_name]".
+            
+            The action name is set to "[BehaviourName].[action_name]".
+            </summary>
+            <param name="agent">The agent that can perform the action.</param>
+            <param name="actionName">The name of the action</param>
+        </member>
+        <member name="M:POSH.sys.strict.POSHAction.fire">
+            <summary>
+            Performs the action and returns if it was successful.
+            </summary>
+            <returns>True if the action was successful, and False otherwise.</returns>
+        </member>
+        <member name="M:POSH.sys.strict.POSHAction.copy">
+            <summary>
+            Returns itsself.
+            
+            This method does NOT return a copy of the action as the action
+            does not have an internal state and therefore doesn't need to
+            be copied.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:POSH.sys.scheduled.DrivePriorityElement">
+            <summary>
+            A drive priority element, containing drive elements.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.scheduled.DrivePriorityElement.#ctor(POSH.sys.scheduled.Agent,System.String,POSH.sys.scheduled.DriveElement[])">
+            <summary>
+            Initialises the drive priority element.
+            
+            The log domain is set to [AgentName].DP.[drive_name]
+            </summary>
+            <param name="agent">The element's agent.</param>
+            <param name="driveName">The name of the associated drive.</param>
+            <param name="elements">The drive elements of the priority element.</param>
+        </member>
+        <member name="M:POSH.sys.scheduled.DrivePriorityElement.reset">
+            <summary>
+            Resets all drive elements in the priority element.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.scheduled.DrivePriorityElement.fire">
+            <summary>
+            Fires the drive prority element.
+            
+            This method fires the first ready drive element in its
+            list and returns FireResult(False, None). If no
+            drive element was ready, then None is returned.
+            </summary>
+            <returns>The result of firing the element.</returns>
+        </member>
+        <member name="M:POSH.sys.scheduled.DrivePriorityElement.copy">
+            <summary>
+            Is never supposed to be called and raises an error.
+            </summary>
+            <returns>DrivePriorityElement.copy() is never supposed to be called</returns>
+        </member>
+        <member name="T:POSH.sys.scheduled.POSHAction">
+            <summary>
+            Implementation of an Action.
+            
+            An action as a thin wrapper around a behaviour's action method.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.scheduled.POSHAction.#ctor(POSH.sys.scheduled.Agent,System.String)">
+            <summary>
+            Picks the given action from the given agent.
+            
+            The method uses the agent's behaviour dictionary to get the
+            action method.
+            
+            The log domain is set to "[AgentId].Action.[action_name]".
+            
+            The action name is set to "[BehaviourName].[action_name]".
+            </summary>
+            <param name="agent">The agent that can perform the action.</param>
+            <param name="actionName">The name of the action</param>
+        </member>
+        <member name="M:POSH.sys.scheduled.POSHAction.fire">
+            <summary>
+            Performs the action and returns if it was successful.
+            </summary>
+            <returns>True if the action was successful, and False otherwise.</returns>
+        </member>
+        <member name="M:POSH.sys.scheduled.POSHAction.copy">
+            <summary>
+            Returns itsself.
+            
+            This method does NOT return a copy of the action as the action
+            does not have an internal state and therefore doesn't need to
+            be copied.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:POSH.sys.strict.FireResult">
+            <summary>
+            The result of firing a plan element.
+            
+            This result determines two things:
+                
+                - if we want to continue executing this part of the plan or want to
+                  return to the root.
+                
+                - the plan element to execute in the next step, given that we are
+                  continuing to execute the current plan of the step.
+            
+            Continuing the execution means to either to fire the
+            same element in the next execution step, or to descend further
+            in the plan tree and fire the next element in that tree.
+            The next element to execute also needs to be given. If this element
+            is set to None, the element to execute stays the same. Otherwise
+            the given element is copied, reset, and given as the next element.
+            
+            If we are not continuing the execution of the current part of the
+            plan, the currently fired drive element returns to the root of the plan.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.strict.FireResult.#ctor(System.Boolean,POSH.sys.strict.CopiableElement)">
+            <summary>
+            Initialises the result of firing an element.
+            
+            For a more detailed description of the arguments, read the
+            class documentation.
+            </summary>
+            <param name="continueExecution">If we want to continue executing the current
+            part of the plan.</param>
+            <param name="nextElement">The next plan element to fire.</param>
+        </member>
+        <member name="M:POSH.sys.strict.FireResult.continueExecution">
+            <summary>
+            Returns if we want to continue execution the current part of the
+            plan.
+            </summary>
+            <returns>If we want to continue execution.</returns>
+        </member>
+        <member name="M:POSH.sys.strict.FireResult.nextElement">
+            <summary>
+            Returns the element to fire at the next step.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:POSH.sys.strict.DrivePriorityElement">
+            <summary>
+            A drive priority element, containing drive elements.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.strict.DrivePriorityElement.#ctor(POSH.sys.strict.Agent,System.String,POSH.sys.strict.DriveElement[])">
+            <summary>
+            Initialises the drive priority element.
+            
+            The log domain is set to [AgentName].DP.[drive_name]
+            </summary>
+            <param name="agent">The element's agent.</param>
+            <param name="driveName">The name of the associated drive.</param>
+            <param name="elements">The drive elements of the priority element.</param>
+        </member>
+        <member name="M:POSH.sys.strict.DrivePriorityElement.reset">
+            <summary>
+            Resets all drive elements in the priority element.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.strict.DrivePriorityElement.fire">
+            <summary>
+            Fires the drive prority element.
+            
+            This method fires the first ready drive element in its
+            list and returns FireResult(False, None). If no
+            drive element was ready, then None is returned.
+            </summary>
+            <returns>The result of firing the element.</returns>
+        </member>
+        <member name="M:POSH.sys.strict.DrivePriorityElement.copy">
+            <summary>
+            Is never supposed to be called and raises an error.
+            </summary>
+            <returns>DrivePriorityElement.copy() is never supposed to be called</returns>
+        </member>
+        <member name="T:POSH.sys.strict.DriveCollection">
+            <summary>
+            Implementation of DriveCollection
+            
+            A drive collection, containing drive priority elements.
+            
+            A POSH.strict.DriveCollection contains several
+            POSH.strict.DrivePriorityElement s
+            that contains several POSH.strict.DriveElement s. Upon firing a drive
+            collection, either the goal is satisfied, or either of the drive
+            priority elements needs to be fired successfully. Otherwise, the
+            drive fails. The drive priority elements are tested in order or
+            their priority. A drive priority element fires successfully if one
+            of its drive elements is ready and can be fired.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.strict.DriveCollection.#ctor(POSH.sys.strict.Agent,System.String,System.String,POSH.sys.strict.DrivePriorityElement[],POSH.sys.strict.Trigger)">
+            <summary>
+            Initialises the drive collection.
+            
+            The log domain is set to [AgentId].DC.[collection_name]
+            
+            If no goal is given (goal = None), then it can never be satisfied.
+            </summary>
+            <param name="agent">The collection's agent.</param>
+            <param name="collectionName">The name of the drive collection.</param>
+            <param name="priorityElements">The drive elements in order of their
+                    priority, starting with the highest priority.</param>
+            <param name="goal">The goal of the drive collection.</param>
+        </member>
+        <member name="M:POSH.sys.strict.DriveCollection.reset">
+            <summary>
+            Resets all the priority elements of the drive collection.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.strict.DriveCollection.fire">
+            <summary>
+            Fires the drive collection.
+            
+            This method first checks if the goal (if not null) is met. If
+            that is the case, then FireResult(False, self) is
+            returned. Otherwise it goes through the list of priority
+            elements until the first one was fired successfully (returning
+            something else than None). In that case, FireResult(True,
+            None) is returned. If none of the priority elements were
+            successful, FireResult(False, None) is returned, indicating a
+            failing of the drive collection.
+            
+            To summarise:
+                - FireResult(True, None): drive element fired
+                - FireResult(False, self): goal reached
+                - FireResult(False, None): drive failed
+            </summary>
+            <returns>The result of firing the drive.</returns>
+        </member>
+        <member name="M:POSH.sys.strict.DriveCollection.copy">
+            <summary>
+            Is never supposed to be called and raises an error.
+            </summary>
+            <returns>DriveCollection.copy() is never supposed to be called</returns>
+        </member>
+        <member name="T:POSH.sys.strict.CompetencePriorityElement">
+            <summary>
+            A competence priority element, containing competence elements.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.strict.CompetencePriorityElement.#ctor(POSH.sys.strict.Agent,System.String,POSH.sys.strict.CompetenceElement[])">
+            <summary>
+            Initialises the competence priority element.
+            
+            The log domain is set to [AgentName].CP.[competence_name]
+            </summary>
+            <param name="agent">The element's agent.</param>
+            <param name="CompetenceName">The name of the competence.</param>
+            <param name="elements">The set of competence elements of the
+                    priority element.</param>
+        </member>
+        <member name="M:POSH.sys.strict.CompetencePriorityElement.reset">
+            <summary>
+            Resets all its competence elements.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.strict.CompetencePriorityElement.fire">
+            <summary>
+            Fires the competence priority element.
+            
+            This method goes through its list of competence elements
+            and fires the first one that is ready. In that case,
+            the result of the competence element is returned. Otherwise,
+            it returns FireResult(True, None) (this can never be returned
+            by a competence element and is therefore uniquely identifyable).
+            </summary>
+            <returns>The result of firing the competence priority element.</returns>
+        </member>
+        <member name="M:POSH.sys.strict.CompetencePriorityElement.copy">
+            <summary>
+            Returns a reset copy of itsself.
+            
+            This method creates a copy of itsself that has a copy of the
+            reset priority elements but is otherwise equal.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:POSH.sys.Behaviour">
+            <summary>
+            Behaviour base class.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.Behaviour.#ctor(POSH.sys.AgentBase)">
+            <summary>
+            Returns a list of available senses.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.Behaviour.#ctor(POSH.sys.AgentBase,System.String[],System.String[],System.Collections.Generic.Dictionary{System.String,System.Object},POSH.sys.Behaviour)">
+            <summary>
+            Initialises behaviour with given actions and senses.
+            
+            The actions and senses has to correspond to
+              - the method names that implement those actions/senses
+              - the names used in the plan
+            
+            The log domain of a behaviour is set to
+            [AgentId].Behaviour
+            </summary>
+            <param name="agent">The agent that uses the behaviour</param>
+            <param name="actions">The action names to register.</param>
+            <param name="senses">The sense names to register.</param>
+            <param name="attributes">List of attributes to initialise behaviour state.</param>
+            <param name="caller"></param>
+        </member>
+        <member name="M:POSH.sys.Behaviour.FilterPrimitives(System.String[],System.Collections.Generic.Dictionary{System.String,System.Collections.Generic.SortedList{System.Single,POSH.sys.annotations.POSHPrimitive}})">
+            <summary>
+            removes all entries of the dictionary which are mentioned in the filter
+            As only the dict reference is passed in the dictionary will be modified even if it is not passed back.
+            </summary>
+            <param name="filter">array of primitiv names which should not be made available for the agent</param>
+            <param name="dict">the primitives which are available from a specific behaviour</param>
+        </member>
+        <member name="M:POSH.sys.Behaviour.ExtractPrimitives(POSH.sys.Behaviour,System.Boolean)">
+            <summary>
+            The method is extracting the primitives based on their string names from a behaviour object.
+            At this point all possible actions/ senses are extracted and their names are returned as a string list.
+            </summary>
+            <param name="source">The behaviour to search for the primitives</param>
+            <param name="acts">True if search for Actions,\n False if searching for Senses</param>
+            <returns>Returns a Dict containing the plan name as key and the correct Attribute defintions 
+            all for Actions/Senses inside the given behaviour linked to the specific plan name</returns>
+        </member>
+        <member name="M:POSH.sys.Behaviour.GetActionsSenses(POSH.sys.Behaviour)">
+            <summary>
+            @deprecated I just copied this method from the python code but is seems to overcomplicated stuff and using methods from other behaviours is hard to communicate to the user
+            </summary>
+            <param name="sourceObj"></param>
+        </member>
+        <member name="M:POSH.sys.Behaviour.GetName">
+             <summary>
+             Returns the name of the behaviour.
+            
+             The name of a behaviour is the same as the name of
+             the class that implements it.
+             </summary>
+        </member>
+        <member name="M:POSH.sys.Behaviour.IsSuitedForAgent(POSH.sys.AgentBase)">
+            <summary>
+            Allows To limit the freedom of the action selection by inhibiting agents the usage of certain behaviours.
+            This follows the idea of Object orientation and Accessability of unneeded information.
+            </summary>
+            <param name="agent">The agentbase containing information regarding the used lap plan</param>
+            <returns>True if the behaviour should be usable by the agent. False otherwise.</returns>
+        </member>
+        <member name="M:POSH.sys.Behaviour.SetRNG(System.Random)">
+            <summary>
+            Sets the random number generator of the behaviour.
+            
+            This method is called whenever the random number generator
+            of the agent is changed. The random number generator is
+            accessible through the behaviour attribute 'random'.__abs__
+            </summary>
+            <param name="generator">A random number generator.</param>
+        </member>
+        <member name="M:POSH.sys.Behaviour.AssignAttributes(System.Collections.Generic.Dictionary{System.String,System.Object})">
+            <summary>
+            Assigns the behaviour a set of attributes.
+            
+            The attributes are given by a dictionary attribute_name -> value.
+            If the behaviour object already has an attribute with the given name,
+            this attribute is only reassigned if it is not callable (e.g. a
+            method) or a reserved attribute (see Behaviour._reserved_attributes
+            for a list).
+            </summary>
+            <param name="attributes">dictionary of attributes to assign to behaviour.</param>
+        </member>
+        <member name="M:POSH.sys.Behaviour.CheckError">
+            <summary>
+            Returns if the behaviour is ok.
+            
+            This method is called to make sure that the behaviour is ok at every
+            cycle. In its default implementation it always returns False.
+            </summary>
+            <returns>False for OK, True for not OK.</returns>
+        </member>
+        <member name="M:POSH.sys.Behaviour.ExitPrepare">
+            <summary>
+            Called by the agent upon a request for exit.
+            
+            This method prepares the behaviour to stop. In its default
+            implementation it does nothing.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.Behaviour.Reset">
+             <summary>
+             Called by the agent before the main loop is started.
+            
+             This is the best place to connect the behaviours to the world, if
+             required, or register them there. If, for example, a behaviour
+             needs to establish a network connection, then this is the best place
+             to establish this connection.
+            
+             The method has to return if it was successful or not. Alternatively, it
+             can always return True, and then report the behaviour's state in
+             checkError() which is usualy called after all behaviours have been
+             resetted.
+            
+             In its default implementation, this method returns True.
+             </summary>
+             <returns>If the reset was successful.</returns>
+        </member>
+        <!-- Badly formed XML comment ignored for member "M:POSH.sys.Behaviour.RegisterInspector(System.String[])" -->
+        <member name="M:POSH.sys.Behaviour.GetInspectors">
+            <summary>
+            Returns the list of currently registered inspectors.
+            
+            The list of inspectors contains elements of the form
+            C{(name, accessor, mutator)}, where C{name} is the name of the
+            inspector, C{accessor} is the accessor method (taking no arguments),
+            and C{mutator} is the mutator method (taking a single string as its
+            only argument), or C{None} if no mutator is provided.
+            </summary>
+            <returns>List of inspectors.</returns>
+        </member>
+        <member name="P:POSH.sys.Behaviour.suitedPlans">
+            <summary>
+            This string contains all lap plan names which the behaviour is suited for. The plan names are separated by '|'. 
+            If no plan names are entered and the suitedPlans is left empty the behaviour is suitable for all agents.
+            </summary>
+        </member>
+        <member name="T:POSH.sys.Latch">
+            <summary>
+            A class that implements a universal latch
+            A latch has numerous properties:
+            <![CDATA[lower=lower threshold. If current_state < lower, trigger=True
+            upper=upper threshold (optional)
+            inter=intermediate threshold (optional) for interrupts
+            increment=positive change of current_state
+            decrement=negative change of current_state
+            ]]>
+            </summary>
+        </member>
+        <member name="T:POSH.sys.exceptions.ParseException">
+            <summary>
+            An Exception that indicates a parse error.
+            </summary>
+        </member>
+        <member name="T:POSH.sys.PlanBuilder">
+            <summary>
+            A class to build plans and create plan objects
+            
+            This class is used by the lap-file parser to create plan objects.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.PlanBuilder.#ctor">
+            <summary>
+            Initialises the plan builder.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.PlanBuilder.setDocString(System.String[])">
+            <summary>
+            Sets the docstring of the plan.
+            
+            This string is not used for plan generation.
+            Calling this method replaces an alreay set docstring.
+            </summary>
+            <param name="docString">The docstring as list of strings.
+                    [string, string, string]</param>
+        </member>
+        <member name="M:POSH.sys.PlanBuilder.SetDriveCollection(POSH.sys.Tuple{System.String,System.String,System.Collections.Generic.List{System.Object},System.Collections.Generic.List{POSH.sys.Tuple{System.String,System.Collections.Generic.List{System.Object},System.String,System.Int64}[]}})">
+             <summary>
+             Sets the drive collection of the plan.
+             
+             The drive collection has to be given in the following format:
+             (type, name, goal, priorities)
+             where:
+                 - type: string, any of DC, RDC, SDC, SRDC
+                 - name: string, name of drive collection
+                 - goal: a goal list as described below
+                 - priorities: a list of comptence priorities as described below
+            
+             A goal is a sequence of senses and sense-acts, where sense-acts
+             are given by their name as a string, and senses are given by a
+             triple of the form (name, value, predicate), where all elements
+             are given as string. Valid values for predicates are discussed in
+             the documentation of L{POSH.strict.Sense}. If there is no goal, then
+             None can be given instead of the goal, which is treated equivalently
+             to an empty list.
+            
+             A list of priorities is a sequence of collections of drive elements,
+             like [[drive element 1a, drive element 1b], [drive element 2a], ...],
+             Each drive element is a quadruple given by (name, trigger, triggerable,
+             frequency), where the name is a string, the trigger is - just as a
+             goal - a collection of senses and sense-acts, a triggerable is given
+             by its name, and the frequency is a long integer. If there is no
+             trigger (i.e. the element is always triggered), then None can be
+             given as a trigger.
+             </summary>
+             <param name="collection"></param>
+        </member>
+        <member name="M:POSH.sys.PlanBuilder.addActionPattern(POSH.sys.Tuple{System.String,System.Int64,System.Collections.Generic.List{System.Object}})">
+             <summary>
+             Adds the given action pattern to the plan.
+            
+             The given action pattern has to be a triple of the form (name,
+             time, action squence), where the name is given by a string,
+             the time is given as a long integer (or None, if no time is
+             specified), and the action sequence is given as a sequence of
+             strings that give the action / sense-act / competence names, or
+             triples of the form (name, value, predicate), where all elements
+             are given as string and the triple describes a sense. Valid values
+             for predicates are discussed in the documentation of L{POSH.strict.Sense}.
+             </summary>
+             <param name="pattern">A structure describing the action pattern.</param>
+        </member>
+        <!-- Badly formed XML comment ignored for member "M:POSH.sys.PlanBuilder.addCompetence(POSH.sys.Tuple{System.String,System.Int64,System.Collections.Generic.List{System.Object},System.Collections.Generic.List{POSH.sys.Tuple{System.String,System.Collections.Generic.List{System.Object},System.String,System.Int32}[]}})" -->
+        <member name="M:POSH.sys.PlanBuilder.build(POSH.sys.strict.Agent)">
+            <summary>
+            Builds the plan and returns the drive collection.
+            
+            This method operates in several stages:
+            
+             1. It is checked if none of the action pattern or competence
+                names are already taken by an action or sense/sense-act
+                in the behaviour library. If a conflict
+                is found, then NameError is raised.
+            
+             2. All competence / action pattern objects are created, together
+                with goals and triggers, but their elements are left empty.
+            
+             3. The elements of competences and action pattern are created.
+            
+             4. The drive collection is built and returned.
+            </summary>
+            <param name="agent">The agent that uses the plan.</param>
+            <returns>The drive collection as the root of the plan.</returns>
+            <exception cref="T:POSH.sys.exceptions.NameException">
+            If clashes in naming of actions / action pattern /
+               competences were found, or if a sense / action / sense-act was
+               not found.
+            </exception>
+        </member>
+        <member name="M:POSH.sys.PlanBuilder.checkNamesClashes(POSH.sys.strict.Agent)">
+            <summary>
+            Checks for naming clashes in actions / senses / action pattern /
+            competences.
+            </summary>
+            <param name="agent">The agent to check clashes for (as the agent provides
+                the behaviour dictionary).</param>
+            <exception cref="T:POSH.sys.exceptions.NameException">If a clash is detected.
+            </exception>
+        </member>
+        <member name="M:POSH.sys.PlanBuilder.buildDriveCollection(POSH.sys.strict.Agent,System.Collections.Generic.Dictionary{System.String,POSH.sys.strict.Competence},System.Collections.Generic.Dictionary{System.String,POSH.sys.strict.ActionPattern})">
+            <summary>
+            Builds the drive collection and returns it.
+            
+            This method builds the drive collection, of which the structure has
+            been set by setDriveCollection. Additionally, its
+            assigns the agent a timer, as specified by the drive collection
+            (i.e. a stepped timer, in the case of an SDC drive, and a
+            real-time timer in the case of an SRDC drive). If the timer is
+            a real-time timer, then it is initialised with a loop frequency of
+            50Hz.
+            
+            Only drives of type 'SDC' and 'SRDC' are accepted. In any other case
+            a TypeError is raised.
+            </summary>
+            <param name="agent">The agent that the drive collection is built for.</param>
+            <param name="competences">A competence object dictionary.</param>
+            <param name="actionPatterns">An action pattern dictionary.</param>
+            <exception cref="T:System.TypeLoadException">For drives of types other than SDC or SRDC.</exception>
+            <returns>The drive collection.</returns>
+        </member>
+        <member name="M:POSH.sys.PlanBuilder.buildDriveElement(POSH.sys.Tuple{System.String,System.Collections.Generic.List{System.Object},System.String,System.Int64},POSH.sys.strict.Agent,System.Collections.Generic.Dictionary{System.String,POSH.sys.strict.Competence},System.Collections.Generic.Dictionary{System.String,POSH.sys.strict.ActionPattern})">
+            <summary>
+            Builds a drive element according to the given structure.
+            
+            The structure of a drive element is described in
+            setDriveCollection.
+            </summary>
+            <param name="element">The structure of the drive element to build.</param>
+            <param name="agent">The agent to build the drive collection for.</param>
+            <param name="competences">A competences object dictionary.</param>
+            <param name="actionPatterns">An action pattern object dictionary.</param>
+            <returns>A drive element. <code>POSH.strict.DriveElement</code></returns>
+        </member>
+        <member name="M:POSH.sys.PlanBuilder.buildCompetences(POSH.sys.strict.Agent,System.Collections.Generic.Dictionary{System.String,POSH.sys.strict.Competence},System.Collections.Generic.Dictionary{System.String,POSH.sys.strict.ActionPattern})">
+            <summary>
+            Completes the competences based on the given competence stubs.
+            
+            This method modifies the given competence stubs and creates
+            all its elements. These elements can either be other
+            competences, action pattern, or actions. In case of actions,
+            the corresponding POSH.strict.Action objects are created. The
+            actions have to be available in the agent's behaviour dictionary.
+            </summary>
+            <param name="agent">The agent to build the competences for.</param>
+            <param name="competences">The competence stubs, as returned by
+                buildCompetenceStubs</param>
+            <param name="actionPatterns">The action pattern stubs, as returned by 
+                buildActionPatternStubs</param>
+        </member>
+        <member name="M:POSH.sys.PlanBuilder.buildActionPatterns(POSH.sys.strict.Agent,System.Collections.Generic.Dictionary{System.String,POSH.sys.strict.Competence},System.Collections.Generic.Dictionary{System.String,POSH.sys.strict.ActionPattern})">
+            <summary>
+            Completes the action pattern based on the given
+            action pattern stubs.
+            
+            This method modifies the given action pattern stubs and
+            creates all its elements. The elements can either be other
+            competences, actions or senses, where competences are only
+            allowed as the last elements in action patterns. In case of
+            actions / senses, the corresponding POSH.strict.Action /
+            POSH.strict.Sense objects are created. The actions / senses have
+            to be available in the agent's behaviour dictionary.
+            </summary>
+            <param name="agent">The agent to build the competences for.</param>
+            <param name="competences">The competence stubs, as returned by 
+                buildCompetenceStubs.</param>
+            <param name="actionPatterns">The action pattern stubs, as returned by 
+                buildActionPatternStubs</param>
+            <returns></returns>
+        </member>
+        <member name="M:POSH.sys.PlanBuilder.buildCompetenceStubs(POSH.sys.strict.Agent)">
+            <summary>
+            Builds stub objects for the plan competences.
+            
+            The stub competences are competences without elements.
+            </summary>
+            <param name="agent">The agent to build the competences for.</param>
+            <returns>A dictionary with competence stubs.</returns>
+        </member>
+        <member name="M:POSH.sys.PlanBuilder.buildActionPatternStubs(POSH.sys.strict.Agent)">
+            <summary>
+            Build stub objects for the plan action pattern.
+            
+            The stub action pattern are action pattern without actions.
+            </summary>
+            <param name="agent"> The action to build the action pattern for.</param>
+            <returns>A dictionary with action pattern stubs.</returns>
+        </member>
+        <member name="M:POSH.sys.PlanBuilder.buildCompetenceElement(POSH.sys.Tuple{System.String,System.Collections.Generic.List{System.Object},System.String,System.Int32},POSH.sys.strict.Agent,System.Collections.Generic.Dictionary{System.String,POSH.sys.strict.Competence},System.Collections.Generic.Dictionary{System.String,POSH.sys.strict.ActionPattern})">
+            <summary>
+            Builds a competence element from the given structure.
+            
+            The competence element has to be given as a the quadruple (name,
+            trigger, triggerable, retries), where the name is a string, the
+            trigger is described in L{addCompetence}, the triggerable is the
+            name of an action, competence or action pattern, and retries is the
+            number of retries and given as long.
+            
+            If the triggerable cannot be found, then a NameError is raised.
+            </summary>
+            <param name="element">The structure of the competence element (Tuple[name,
+            trigger, triggerable, retries]).</param>
+            <param name="agent">The agent that the competence element is built for.</param>
+            <param name="competences">A competence object dictionary.</param>
+            <param name="actionPatterns">An action pattern object dictionary.</param>
+            <returns>The competence element described by the given structure.</returns>
+            <exception cref="T:POSH.sys.exceptions.NameException"> If the triggerable cannot be found.
+            </exception>
+        </member>
+        <member name="M:POSH.sys.PlanBuilder.buildTrigger(POSH.sys.strict.Agent,System.Collections.Generic.List{System.Object})">
+            <summary>
+            Builds the trigger forn the given structure.
+            
+            The given trigger structure is a sequence of sense-acts given
+            by simple strings, and senses given by the triple (name, value,
+            predicate), where all of the elements of the triple are string.
+            Optionally, the value and predicate can be None.
+            
+            If the trigger list is empty, or None is given for the trigger,
+            then None is returned.
+            </summary>
+            <param name="agent">The agent to build the trigger for.</param>
+            <param name="trigger">The sequence of senses and sense-acts: 
+                senses (<code>string</code>) and full-senses 
+                (<code>Tuple[string,string,string]</code>) </param>
+            <returns> The trigger object</returns>
+        </member>
+        <member name="M:POSH.sys.PlanBuilder.buildGoal(POSH.sys.strict.Agent,System.Collections.Generic.List{System.Object})">
+            <summary>
+            Builds the goal from the given structure.
+            
+            The given goal structure is a sequence of sense-acts given by
+            simple strings, and senses given by the triple (name, value,
+            predicate), where all of the elements of the triple are string.
+            Optionally, the value and predicate can be None.
+            
+            If the goal list is empty, or None is given for the goal,
+            then None is returned.
+            </summary>
+            <param name="agent">The agent to build the goal for.</param>
+            <param name="goal">The sequence of senses and sense-acts: 
+                senses (string) and full-senses 
+                (Tuple[string,string,string]) </param>
+            <returns>The goal object.</returns>
+        </member>
+        <member name="M:POSH.sys.PlanBuilder.buildSenseAct(POSH.sys.strict.Agent,System.String)">
+            <summary>
+            Returns a sense-act object for the given name.
+            </summary>
+            <param name="agent">The agent to build the sense-act for.</param>
+            <param name="senseName">The name of the sense-act.</param>
+            <returns>The created sense-act object</returns>
+        </member>
+        <member name="M:POSH.sys.PlanBuilder.buildSense(POSH.sys.strict.Agent,POSH.sys.Tuple{System.String,System.String,System.String})">
+            <summary>
+            Returns a sense object for the given structure.
+            
+            The structure is of the form (name, value, predicate), where
+            the first is a string, and the other two elements are either
+            a string or None.
+            </summary>
+            <param name="agent">The agent to build the sense for.</param>
+            <param name="senseStruct">The sense structure. (see LAPParser.getFullSenses)</param>
+            <returns>The created sense object</returns>
+            <exception cref="T:POSH.sys.exceptions.NameException">
+            If the sense could not be found in the behaviour dictionary.
+            </exception>
+        </member>
+        <member name="M:POSH.sys.PlanBuilder.getTriggerable(POSH.sys.strict.Agent,System.String,System.Collections.Generic.Dictionary{System.String,POSH.sys.strict.Competence},System.Collections.Generic.Dictionary{System.String,POSH.sys.strict.ActionPattern})">
+            <summary>
+            Returns the action / competence / actionpattern with the given name.
+            
+            This method looks for the element with the given name and
+            returns it.  If the element is an action, then it creates a
+            new L{POSH.strict.Action} object from the agent's behaviour
+            dictionary. Otherwise it just returns the competence or action
+            pattern object.
+            
+            The method also checks if the the given name is both an action and a
+            competence / action pattern. In that case a NameError is raised.
+            </summary>
+            <param name="agent">The agent that the element belongs to.</param>
+            <param name="name">The name of the element.</param>
+            <param name="competences">A competence object dictionary.</param>
+            <param name="actionPatterns">An action pattern object dictionary.</param>
+            <returns>The element with the given name either POSH.strict.Action, POSH.strict.Competence 
+                or POSH.strict.ActionPattern.</returns>
+            <exception cref="T:POSH.sys.exceptions.NameException">
+                If actions and competences / action pattern have
+                the same name.</exception>
+        </member>
+        <member name="M:POSH.sys.annotations.POSHPrimitive.SetLinkedMethod(System.String)">
+            <summary>
+            used to link a method to a specific plan action. As multiple method can reference 
+            different version of the same plan element a one to one matching is required using different version numbers
+            </summary>
+            <param name="name"></param>
+        </member>
+        <member name="M:POSH.sys.annotations.POSHPrimitive.SetOriginatingBhaviour(POSH.sys.Behaviour)">
+            <summary>
+            used to link the behaviour the prmitive originates from
+            different versions of a plan element might be originating from different behaviours
+            </summary>
+            <param name="name"></param>
+        </member>
+        <member name="P:POSH.sys.annotations.POSHPrimitive.command">
+            <summary>
+            the command is the name of a plan element referencing a specific method
+            </summary>
+        </member>
+        <member name="P:POSH.sys.annotations.POSHPrimitive.linkedMethod">
+            <summary>
+            the linked method name is used to identify the correct method name inside a specific behaviour
+            </summary>
+        </member>
+        <member name="P:POSH.sys.annotations.POSHPrimitive.orginatingBehaviour">
+            <summary>
+            the linked method name is used to identify the correct method name inside a specific behaviour
+            </summary>
+        </member>
+        <member name="P:POSH.sys.annotations.POSHPrimitive.version">
+            <summary>
+            the verison number is used to differentiate between different maturety levels of the underlying method
+            the default value is 0.1f
+            </summary>
+        </member>
+        <!-- Badly formed XML comment ignored for member "T:POSH.sys.parse.LAPParser" -->
+        <member name="M:POSH.sys.parse.LAPParser.#ctor">
+            <summary>
+            Initialises the parser.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.parse.LAPParser.Parse(System.String)">
+            <summary>
+            Parses the given input and returns a plan builder object.
+            </summary>
+            <param name="inputString">The input string.</param>
+            <returns>The plan builder object representing the plan.</returns>
+        </member>
+        <member name="M:POSH.sys.parse.LAPParser.NextToken">
+            <summary>
+            Gets the next token from the lexer.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.parse.LAPParser.Match(System.String[])">
+            <summary>
+            Checks if the current token matches the allowed tokens.
+            
+            If there is no current token, then this method raises an Exception
+            that indicates that we've reached the end of the input (unexpectedly).
+            
+            Otherwise it returns if the current token type matches any of the
+            given token types.
+            </summary>
+            <param name="allowedTokens">A list of allowed tokens.</param>
+            <returns>If the current token type matches any of the allowed tokens.</returns>
+            <exception cref="T:POSH.sys.exceptions.ParseException">If there is no current token.</exception>  
+        </member>
+        <member name="M:POSH.sys.parse.LAPParser.Error(System.String)">
+            <summary>
+            Raises an error with the given message.
+            
+            This method raises a ParseException of type
+            'Line xxx: [msg]'.
+            </summary>
+            <param name="msg">The error message.</param>
+            <exception cref="T:POSH.sys.exceptions.ParseException">always</exception>
+        </member>
+        <member name="M:POSH.sys.parse.LAPParser.Start">
+            <summary>
+            The parser start symbol.
+            
+            When called, it parses the set input string and returns
+            the created plan builder object.
+            </summary>
+            <returns>A plan builder object representing the parsed plan.</returns>
+        </member>
+        <!-- Badly formed XML comment ignored for member "M:POSH.sys.parse.LAPParser.Plan" -->
+        <member name="M:POSH.sys.parse.LAPParser.GetDocString">
+            <summary>
+            docstring ::= DOCUMENTATION COMMENT COMMENT COMMENT ")"
+            </summary>
+            <returns>The three comments in the form {string,string,string}.</returns>
+        </member>
+        <!-- Badly formed XML comment ignored for member "M:POSH.sys.parse.LAPParser.GetDriveCollection" -->
+        <member name="M:POSH.sys.parse.LAPParser.GetDriveCollectionId">
+            <summary>
+            drive-collection-id ::= DC | RDC | SDC | SRDC
+            </summary>
+            <returns>The drive collection id as a string.</returns>
+        </member>
+        <!-- Badly formed XML comment ignored for member "M:POSH.sys.parse.LAPParser.GetDrivePriorities" -->
+        <!-- Badly formed XML comment ignored for member "M:POSH.sys.parse.LAPParser.GetDriveElements" -->
+        <!-- Badly formed XML comment ignored for member "M:POSH.sys.parse.LAPParser.GetDriveElement" -->
+        <!-- Badly formed XML comment ignored for member "M:POSH.sys.parse.LAPParser.GetCompetence" -->
+        <member name="M:POSH.sys.parse.LAPParser.GetCompetencePriorities">
+            <summary>
+            <code>
+            <![CDATA[competence-priorities ::= <competence-elements>+]]>
+            </code>
+            </summary>
+            <returns>A list of competence priorities.</returns>
+        </member>
+        <member name="M:POSH.sys.parse.LAPParser.GetCompetenceElements">
+            <summary>
+            <code>
+            <![CDATA[competence-elements ::= "(" <competence-element>+ ")"]]>
+            </code>
+            </summary>
+            <returns>A sequence of competence elements as given by
+                competence_element</returns>
+        </member>
+        <member name="M:POSH.sys.parse.LAPParser.GetCompetenceElement">
+            <summary>
+            <code>
+            <![CDATA[
+            competence-element ::= "(" NAME ( NIL | "(" <trigger> | ) NAME
+                                        ( NIL | INTNUM | )
+                                        <opt-comment> ")"
+            ]]>
+            </code>
+            
+            If no number of retires is given, then 0 is returned.
+            </summary>
+            <returns>The competence element as 
+            (name, trigger, triggerable, maxRetries)</returns>
+        </member>
+        <member name="M:POSH.sys.parse.LAPParser.GetActionPattern">
+            <summary>
+            <code>
+            <![CDATA[
+            aption-pattern ::= AP NAME ( NIL | "(" <time> | )
+                                "(" <action-pattern-elements> <opt-comment> ")"
+            ]]>
+            If no time is given, None is returned for the time.
+            </code>
+            </summary>
+            <returns>The action pattern as (name, time, [name1, name2, ...])
+                (string, long, (string or full-sense (<code>Tuple[string,string,string]</code>), ...))
+            </returns>
+        </member>
+        <member name="M:POSH.sys.parse.LAPParser.GetActionPatternElements">
+            <summary>
+            <code>
+            <![CDATA[action-pattern-elements ::= ( <full-sense> | NAME )+ ")"]]>
+            </code>
+            </summary>
+            <returns>A list of action pattern elements given as senses 
+            (<code>string</code>) and full-senses 
+            (<code>Tuple[string,string,string]</code>).</returns>
+        </member>
+        <member name="M:POSH.sys.parse.LAPParser.GetGoal">
+            <summary>
+            <code>
+            <![CDATA[goal ::= GOAL <senses> ")"]]>
+            </code>
+            
+            If the list of senses is empty, then None is returned.
+            </summary>
+            <returns>>A list of senses (<code>string</code>) and full-senses 
+            (<code>Tuple[string,string,string]</code>) that were given as the goal</returns>
+        </member>
+        <member name="M:POSH.sys.parse.LAPParser.GetTrigger">
+            <summary>
+            <code>
+            <![CDATA[trigger ::= TRIGGER <senses> ")"]]>
+            </code>
+            If the list of senses is empty, then None is returned.
+            </summary>
+            <returns>A list of senses (<code>string</code>) and full-senses 
+            (<code>Tuple[string,string,string]</code>) that were given as the trigger</returns>
+        </member>
+        <member name="M:POSH.sys.parse.LAPParser.GetSenses">
+            <summary>
+            <code>
+            <![CDATA[
+            senses ::= ( NIL | "(" ( NAME | <full-sense> )+ ")" )
+            ]]>
+            </code>
+            If NIL is given, an empty list is returned.
+            </summary>
+            <returns>An object list containing senses (<code>string</code>) and full-senses 
+            (<code>Tuple[string,string,string]</code>).</returns>
+        </member>
+        <member name="M:POSH.sys.parse.LAPParser.GetFullSenses">
+            <summary>
+            <code>
+            <![CDATA[full-sense ::= "(" NAME [<value> [<predicate>]] ")"]]>
+            </code>
+            </summary>
+            <returns>The full sense, and None for the elements that
+                are not specified.</returns>
+        </member>
+        <member name="M:POSH.sys.parse.LAPParser.GetValue">
+            <summary>
+            value ::= NUMINT | NUMFLOAT | NAME
+            </summary>
+            <returns>The value as string.</returns>
+        </member>
+        <member name="M:POSH.sys.parse.LAPParser.GetPredicate">
+            <summary>
+            predicate ::= PREDICATE
+            </summary>
+            <returns>The predicate as a string.</returns>
+        </member>
+        <!-- Badly formed XML comment ignored for member "M:POSH.sys.parse.LAPParser.GetFreq" -->
+        <member name="M:POSH.sys.parse.LAPParser.GetFreqUnit">
+            <summary>
+            freq-unit ::= HOURS | MINUTES | SECONDS | HZ | PM | NONE
+            </summary>
+            <returns>The token string of the frequency unit.</returns>
+        </member>
+        <!-- Badly formed XML comment ignored for member "M:POSH.sys.parse.LAPParser.GetTime" -->
+        <member name="M:POSH.sys.parse.LAPParser.GetTimeString(System.Int64)">
+            <summary>
+            translates the internal time representation from long back to string
+            </summary>
+            <returns>timeas string including the unit</returns>
+        </member>
+        <member name="M:POSH.sys.parse.LAPParser.GetTimeUnit">
+            <summary>
+            time-unit ::= HOURS | MINUTES | SECONDS | NONE
+            </summary>
+            <returns>The unit as token string.</returns>
+        </member>
+        <member name="M:POSH.sys.parse.LAPParser.GetNumFloat">
+            <summary>
+            numfloat ::= NUMINT | NUMFLOAT
+            </summary>
+            <returns>The number as float.</returns>
+        </member>
+        <member name="M:POSH.sys.parse.LAPParser.GetOptComment">
+            <summary>
+            opt-comment ::= COMMENT |
+            </summary>
+        </member>
+        <member name="T:POSH.sys.strict.CompetenceElement">
+            <summary>
+            A competence element.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.strict.CompetenceElement.#ctor(POSH.sys.strict.Agent,System.String,POSH.sys.strict.Trigger,POSH.sys.strict.CopiableElement,System.Int32)">
+            <summary>
+            Initialises the competence element.
+            
+            The log domain is set to [AgentName].CE.[element_name].
+            </summary>
+            <param name="agent">The competence element's agent.</param>
+            <param name="elementName">The name of the competence element.</param>
+            <param name="trigger">The element's trigger</param>
+            <param name="element">The element to fire (Action,Competence or ActionPattern).</param>
+            <param name="maxRetries">The maximum number of retires. If this is set
+                    to a negative number, it is ignored.</param>
+        </member>
+        <member name="M:POSH.sys.strict.CompetenceElement.reset">
+            <summary>
+            Resets the retry count.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.strict.CompetenceElement.isReady(System.Int64)">
+            <summary>
+            Returns if the element is ready to be fired.
+            
+            The element is ready to be fired if its trigger is
+            satisfied and it was not fired more than maxRetries.
+            Note that timestamp is ignored in this method. It is only
+            there because isReady is defined like that in the
+            POSH.strict.Element interface.
+            </summary>
+            <param name="timeStamp"></param>
+            <returns>If the element is ready to be fired.</returns>
+        </member>
+        <member name="M:POSH.sys.strict.CompetenceElement.fire">
+            <summary>
+            Fires the competence element.
+            
+            If the competence element's element is an Action, then this
+            action is executed and FireResult(False, None) is returned.
+            Otherwise, FireResult(True, element) is returned,
+            indicating that at the next execution step that element has
+            to be fired.
+            </summary>
+            <returns>Result of firing the competence element.</returns>
+        </member>
+        <member name="M:POSH.sys.strict.CompetenceElement.copy">
+            <summary>
+            Returns a reset copy of itsself.
+            
+            This method creates a copy of itsself that links to the
+            same element, but has a reset retry counter.
+            </summary>
+            <returns>A reset copy of itself.</returns>
+        </member>
+        <member name="T:POSH.sys.scheduled.TimerBase">
+            <summary>
+            An agent timer base class. 
+            This class defines the interface of an agent timer class.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.scheduled.TimerBase.#ctor">
+            <summary>
+            This method resets the timer.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.scheduled.TimerBase.CurrentTimeStamp">
+            <summary>
+            Returns the current timestamp in milliseconds.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.scheduled.TimerBase.Reset">
+            <summary>
+            Resetting the timer sets its internal starting time to 0. 
+            All calls to L{time} after calling this method return the time 
+            that has passed since the this method has been classed.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.scheduled.TimerBase.Time">
+            <summary>
+            Returns the current time in milliseconds.
+            <returns>
+            The current time in milliseconds using the long Data type
+            </returns>
+            </summary>
+        </member>
+        <member name="M:POSH.sys.scheduled.TimerBase.LoopEnd">
+            <summary>
+            To be called at the end of each loop.
+            
+             For a stepped timer, this method increases the time. For a 
+             real-time timer, this method does nothing.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.scheduled.TimerBase.LoopWait">
+            <summary>
+            Manages the loop frequency.
+            
+             This method is supposed to be called at the end of each loop
+             to adjust the loop frequency. It waits a certain time and then
+             returns, to make the loop run at a certain frequency. Hence,
+             it holds statistics about the time inbetween two calls of this
+             methods and adjusts the wait time to achieve the required time
+             difference.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.scheduled.TimerBase.SetLoopFreq(System.Int64)">
+            <summary>
+            Sets the new loop frequency and resets the timer.
+            This method should only affect real-time timers.
+            <value name="loopFreq">
+            The loop frequence, given by the time in milliseconds that one loop should take.
+            </value>
+            </summary>
+        </member>
+        <member name="T:POSH.sys.scheduled.SteppedTimer">
+            <summary>
+            A stepped agent timer.
+            
+            This timer is a stepped timer, which is to be used if the agent is
+            stepped, i.e. controlled from and outside controller. The timer
+            starts at time 0 and increases the time every time that L{loopEnd} is
+            called. It does not provide loop timing, as that wouldn't make any
+            sense if the agent is controlled from the outside.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.scheduled.SteppedTimer.Time">
+            <summary>
+            Returns the current state of the internal timer.
+            </summary>
+            <returns>current time</returns>
+        </member>
+        <member name="M:POSH.sys.scheduled.SteppedTimer.LoopEnd">
+            <summary>
+            Increases the internal timer by 1.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.scheduled.SteppedTimer.LoopWait">
+            <summary>
+            Does nothing, as the stepped timer does not provide loop control.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.scheduled.SteppedTimer.SetLoopFreq(System.Int64)">
+            <summary>
+            Does nothing, as the stepped timer does not provide loop control.
+            </summary>
+            <param name="loopFreq"> is ignored
+            </param>
+        </member>
+        <member name="T:POSH.sys.scheduled.RealTimeTimer">
+            <summary>
+            An agent real-time timer.
+            
+            The real-time timer relies on the system clock for its timing. On
+            initialising and resetting the timer, its internal clock is set to
+            0, and any call to L{time} returns the time that passed since the
+            timer was resetted last. The timer provides loop frequency
+            control.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.scheduled.RealTimeTimer.#ctor(System.Int64)">
+            <summary>
+            Resets the timer and sets the loop frequency.
+            <param name="loopFreq">
+            The wanted loop frequency, given by the time in
+            milliseconds that one loop should take.
+            </param>
+             The loop frequency is the one used by L{loopWait}.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.scheduled.RealTimeTimer.Reset">
+            <summary>
+            Resets the timer.
+            
+             All future calls to L{time} return the time that passed since this
+             method was called last.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.scheduled.RealTimeTimer.Time">
+            <summary>
+            Returns the time passed since the last call of L{reset}.
+            <returns>
+            Time passed in milliseconds.
+            </returns>
+            </summary>
+        </member>
+        <member name="M:POSH.sys.scheduled.RealTimeTimer.LoopEnd">
+            <summary>
+            To be called at the end of each loop.
+            
+             Does nothing, as the timing is provided by the system clock.
+            </summary>
+        </member>
+        <!-- Badly formed XML comment ignored for member "M:POSH.sys.scheduled.RealTimeTimer.LoopWait" -->
+        <member name="M:POSH.sys.scheduled.RealTimeTimer.SetLoopFreq(System.Int64)">
+            <summary>
+            Sets the new loop frequency and resets the timer.
+            <value name="loopFreq">
+            The loop frequence, given by the time in milliseconds that one loop should take.
+            </value>
+            </summary>
+        </member>
+        <member name="T:POSH.sys.scheduled.POSHSense">
+            <summary>
+            A sense / sense-act as a thin wrapper around a behaviour's
+            sense / sense-act method.
+            </summary>
+        </member>
+        <!-- Badly formed XML comment ignored for member "M:POSH.sys.scheduled.POSHSense.#ctor(POSH.sys.scheduled.Agent,System.String,System.String,System.String)" -->
+        <member name="M:POSH.sys.scheduled.POSHSense.fire">
+            <summary>
+            Activates the sense and returns its result.
+            </summary>
+            <returns>The result of the sense.</returns>
+        </member>
+        <member name="M:POSH.sys.scheduled.POSHSense.copy">
+            <summary>
+            Returns itsself.
+            
+            This method does NOT return a copy of the action as the action
+            does not have an internal state and therefore doesn't need to
+            be copied.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="F:POSH.sys.scheduled.Agent.DRIVER_DELAY">
+            
+            These constants control the amount of sleep() between runs. They work in a
+            logarithmic fashion when approaching the processor limit.
+            Default # of seconds to delay between each driver run. This is a hard limit
+            of the number of runs that can happen in one second.
+                               1/DRIVER_DELAY * DELAY_MULTIPLIER = Hz
+            Each agent can set own self.delay. Set to 0 to disable limit. Generally
+            not accurate over approx. 100Hz with a multiplier of 1.
+            DELAY_MULTIPLIER can not be 0. If 0, it will cause divide by 0 error.
+            Time consumming bb checks may further lower the frequency of drive runs.
+        </member>
+        <member name="T:POSH.sys.scheduled.CompetenceElement">
+            <summary>
+            A competence element.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.scheduled.CompetenceElement.#ctor(POSH.sys.scheduled.Agent,System.String,POSH.sys.scheduled.Trigger,POSH.sys.scheduled.CopiableElement,System.Int32)">
+            <summary>
+            Initialises the competence element.
+            
+            The log domain is set to [AgentName].CE.[element_name].
+            </summary>
+            <param name="agent">The competence element's agent.</param>
+            <param name="elementName">The name of the competence element.</param>
+            <param name="trigger">The element's trigger</param>
+            <param name="element">The element to fire (Action,Competence or ActionPattern).</param>
+            <param name="maxRetries">The maximum number of retires. If this is set
+                    to a negative number, it is ignored.</param>
+        </member>
+        <member name="M:POSH.sys.scheduled.CompetenceElement.reset">
+            <summary>
+            Resets the retry count.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.scheduled.CompetenceElement.isReady(System.Int64)">
+            <summary>
+            Returns if the element is ready to be fired.
+            
+            The element is ready to be fired if its trigger is
+            satisfied and it was not fired more than maxRetries.
+            Note that timestamp is ignored in this method. It is only
+            there because isReady is defined like that in the
+            POSH.scheduled.Element interface.
+            </summary>
+            <param name="timeStamp"></param>
+            <returns>If the element is ready to be fired.</returns>
+        </member>
+        <member name="M:POSH.sys.scheduled.CompetenceElement.fire">
+            <summary>
+            Fires the competence element.
+            
+            If the competence element's element is an Action, then this
+            action is executed and FireResult(False, None) is returned.
+            Otherwise, FireResult(True, element) is returned,
+            indicating that at the next execution step that element has
+            to be fired.
+            </summary>
+            <returns>Result of firing the competence element.</returns>
+        </member>
+        <member name="M:POSH.sys.scheduled.CompetenceElement.copy">
+            <summary>
+            Returns a reset copy of itsself.
+            
+            This method creates a copy of itsself that links to the
+            same element, but has a reset retry counter.
+            </summary>
+            <returns>A reset copy of itself.</returns>
+        </member>
+        <member name="T:POSH.sys.parse.LAPLexer">
+            <summary>
+            A Lexer for tokenising .lap files.
+            
+            This lexer is used by LAPParser to tokenise the input string.
+            </summary>
+        </member>
+        <member name="F:POSH.sys.parse.LAPLexer.SUBPATTERN">
+            <summary>
+            preprocessing pattern. Everything that they match is
+            substituted by the second string in the pair.
+            </summary>
+        </member>
+        <member name="F:POSH.sys.parse.LAPLexer.FULLTOKENS">
+            <summary>
+             tokens that match fully, independent of what follows after
+             them. These are tokens that don't need to be separated by
+             separating characters. This doesn't work for reserved words,
+             as they would match even if they only match the beginning
+             of a word.
+            </summary>
+        </member>
+        <member name="F:POSH.sys.parse.LAPLexer.SEPARATINGCHARS">
+            <summary>
+            separating characters are characters that split the input
+            string into tokens. These will be ignored, if they are not
+            in char_tokens.
+            </summary>
+        </member>
+        <member name="F:POSH.sys.parse.LAPLexer.CHARTOKENS">
+            <summary>
+            character tokens are tokens that are represented by single
+            characters. This has to be a subset of separating_chars.
+            </summary>
+        </member>
+        <member name="F:POSH.sys.parse.LAPLexer.TOKENS">
+            <summary>
+            these tokens need to be spearated by separating characters
+            and need to match the strings inbetween fully. The tokens are
+            given in their order of priority. Hence, if several of those
+            tokens match, the first in the list is returned.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.parse.LAPLexer.#ctor(System.String)">
+            <summary>
+            Initialises the lexer with the given input string.
+            </summary>
+            <param name="inputString">An input string.</param>
+        </member>
+        <member name="M:POSH.sys.parse.LAPLexer.token">
+            <summary>
+            Returns the next found token in the input string.
+            
+            If the input string is empty, then None is returned.
+            </summary>
+            <returns>Next token.</returns>
+        </member>
+        <member name="M:POSH.sys.parse.LAPLexer.getLineNumber">
+            <summary>
+            Returns the current line number.
+            </summary>
+            <returns>The current line number.</returns>
+        </member>
+        <member name="M:POSH.sys.parse.LAPLexer.error(System.Char)">
+            <summary>
+            Report an illegal character.
+            </summary>
+            <param name="stringElement">The illegal character.</param>
+        </member>
+        <!-- Badly formed XML comment ignored for member "T:POSH.sys.AgentInitParser" -->
+        <!-- Badly formed XML comment ignored for member "M:POSH.sys.AgentInitParser.strToValue(System.String)" -->
+        <member name="M:POSH.sys.AgentInitParser.initAgentFile(System.String)">
+             <summary>
+             Returns a data structure containing the content of the file. 
+            
+             See the module docstring for the accepted file format. The returned data
+             structure is a sequence with one entry per agent, with is a pair of a
+             string for the plan and a dictionary for the
+             (behaviour, attribute) -> value assignment.
+             </summary>
+             <param name="initFile">File path for the agent initialisation.</param>
+             <returns>Data structure representing content of the file
+             dictionary (behaviour, attribute) -> value</returns>
+        </member>
+        <member name="T:POSH.sys.StreamLogger">
+            <summary>
+            Class to direct streamed log messages to some output.
+               
+            To use this class, it needs to be inherited and its write() method needs
+            to be overridden to handle new incoming log messages.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.StreamLogger.init">
+            <summary>
+            Initialises the stream logger.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.StreamLogger.write(System.String)">
+            <summary>
+            Handes the new debug message.
+            
+            This method needs to be overridden by an inheriting class to handle
+            log messages. By default, it print the message to the console.
+            </summary>
+            <param name="msg">The log message. If a newline is required, then the
+            message contains the required '\n' character.</param>
+        </member>
+        <member name="T:POSH.sys.scheduled.Competence">
+            <summary>
+            A Competence contains a list of CompetencePriorityElements that
+            each contain some CompetenceElements. Upon firing a competence,
+            the competence finds the first element in the competence priority list
+            that executes successfully. A competence priority list executes
+            successfully if at least one of its elements is ready to fire and is
+            fired.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.scheduled.Competence.#ctor(POSH.sys.scheduled.Agent,System.String,POSH.sys.scheduled.CompetencePriorityElement[],POSH.sys.scheduled.Trigger)">
+            <summary>
+            A POSH competence, containing competence priority elements.
+            
+            Initialises the competence.
+            
+            If no goal is given, then the goal will never be reached.
+            
+            The log domain is set to "[AgentId].C.[competence_name]".
+            </summary>
+            <param name="agent">The competence's agent.</param>
+            <param name="competenceName">The name of the competence.</param>
+            <param name="priorityElements">The priority elements of the competence,
+                    in their order of priority.</param>
+            <param name="goal">The goal of the competence.</param>
+        </member>
+        <member name="M:POSH.sys.scheduled.Competence.reset">
+            <summary>
+            Resets all the competence's priority elements.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.scheduled.Competence.fire">
+            <summary>
+            Fires the competence.
+            
+            This method first checks if the competence's goal is satisfied
+            (if the goal is not None). If that is the case, then it
+            returns FireResult(False, None). Otherwise it fires the
+            priority elements one by one. On the first successful firing
+            of a competence priority element, the method returns the
+            result of the priority element. If no priority element fired
+            successfully, then FireResult(False, None) is returned.
+            </summary>
+            <returns>The result of firing an element, or
+                    FireResult(False, None)</returns>
+        </member>
+        <member name="M:POSH.sys.scheduled.Competence.copy">
+            <summary>
+            Returns a reset copy of itsself.
+            
+            This method creates a copy of itsself that has a copy of the
+            competence priority elements but is otherwise equal.
+            </summary>
+            <returns>A reset copy of itself.</returns>
+        </member>
+        <member name="M:POSH.sys.scheduled.Competence.setElements(POSH.sys.scheduled.CompetencePriorityElement[])">
+            <summary>
+            Sets the list of priority elements of the competence.
+            
+            Calling this method also resets the competence.
+            </summary>
+            <param name="elements"></param>
+        </member>
+        <member name="T:POSH.sys.AgentFactory">
+            <summary>
+            Functions to create new agents.
+            
+            The functions were taken out of the utils module to avoid cyclic imports. @swen: (One might place them again into WorldControl)
+            </summary>
+        </member>
+        <!-- Badly formed XML comment ignored for member "M:POSH.sys.AgentFactory.getPlanType(System.String)" -->
+        <member name="M:POSH.sys.AgentFactory.CreateAgents(System.String,System.String,System.Collections.Generic.List{POSH.sys.Tuple{System.String,System.Object}},POSH.sys.World)">
+             <summary>
+             Returns a sequence of newly created agents using the given behaviour
+             library.
+             
+             The type of agents are determined by their plan type, using the
+             getPlanType() function. If a world object is given, it is given to the
+             agent upon initialisation.
+            
+             The function must be given either a plan file of an agents_init structure,
+             but not both. If a plan is given, then a single agent is created and
+             returned as a sequence of one element. agents_init is a structure as
+             returned by the agentinitparser module and allows creating and
+             initialisation of several agents. The agents are created one by one
+             and returned as a sequence. If both a plan and agents_init are given,
+             then the plan is ignored.
+             </summary>
+             <param name="assemblyName">name of the library</param>
+             <param name="plan">name of the plan (without path and file ending)</param>
+             <param name="agentsInit">data structure for agent initialisation
+             as returned by AgentInitParser.initAgentFile. The first element is the plan file name the second element is an attribute dictionary</param>
+             <param name="world">world object, given to agents at construction</param>
+             <returns>List of Agents</returns>
+        </member>
+        <member name="M:POSH.sys.World.#ctor(System.String,System.String,System.Collections.Generic.List{POSH.sys.Tuple{System.String,System.Object}})">
+            <summary>
+            The World class that is used to communicate with the world
+            initialisation script.
+            
+            Upon running the world initialisation script, using the L{run_world_script},
+            an instance of this class, named 'world' is given to the script. The
+            script can use this instance to gather information on how the world is to
+            be initialised, and can return the world object and other information to
+            the instance that calls this script.
+            </summary>
+            <param name="library">name of the behaviour library that is to be used.</param>
+            <param name="world_args">arguments to be given to the world initialisation script.</param>
+            <param name="agentsInit">structure containing information to initialise the agents. as returned by
+            L{POSH.agentinitparser.parse_agent_init_file}</param>
+        </member>
+        <member name="M:POSH.sys.World.createAgents">
+            <summary>
+            Specifies that the agents are created an run by the world
+            initialisation script.
+            
+            By default, the world initialisation script is only responsible for
+            setting up the world, and eventually returning the world object to
+            initialise the agents with. Calling this method from the world
+            initialisation script indicates that both creation and running the
+            agents is performed by the world initialisation script. For this
+            purpose, the script can use L{library()} and L{agentsInit()}.
+            </summary>
+        </member>
+        <member name="P:POSH.sys.World.library">
+            <summary>
+            Returns the behaviour library name that the agents are to use.
+            </summary>
+        </member>
+        <member name="P:POSH.sys.World.args">
+            <summary>
+            Returns the arguments for customised world initialisation.
+            
+            If no arguments are given, None is returned.
+            </summary>
+        </member>
+        <member name="P:POSH.sys.World.agentsInit">
+            <summary>
+            Returns the agents initialisation structure.
+            </summary>
+        </member>
+        <member name="T:POSH.sys.parse.Token">
+            <summary>
+            A single token.
+            </summary>
+        </member>
+        <member name="M:POSH.sys.parse.Token.#ctor(System.String,System.String)">
+            <summary>
+            Initilaises the token with a token-name and a value.
+            </summary>
+            <param name="token">The name (type) of the token.</param>
+            <param name="value">The value of the token.</param>
+        </member>
+        <member name="T:POSH.sys.events.FireHandler">
+            <summary>
+            The FireHandler is used to track all fire events created by PlanElements in a POSH plan.
+            </summary>
+            <param name="p">the object which triggered the event</param>
+            <param name="f">the additional arguments which give further information about the event</param>
+        </member>
+    </members>
+</doc>

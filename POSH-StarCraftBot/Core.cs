@@ -64,7 +64,7 @@ namespace POSH_StarCraftBot
 
             while (!bwapiclient.BWAPIClient.connect())
             {
-                System.Threading.Thread.Sleep(1000);
+                System.Threading.Thread.Sleep(500);
             }
 
         }
@@ -236,7 +236,7 @@ namespace POSH_StarCraftBot
                             break;
                     }
                 }
-                System.Threading.Thread.Sleep(50);
+                System.Threading.Thread.Sleep(10);
                 bwapiclient.BWAPIClient.update();
                 if (!bwapiclient.BWAPIClient.isConnected())
                 {

@@ -172,12 +172,11 @@ namespace POSH_StarCraftBot.behaviours
                 return false;
 
             Position target = new Position(pos.First().getTilePosition());
-            while ( (!scout.getTargetPosition().opEquals(target) || !scout.isMoving()) )
+            if ( (!scout.getTargetPosition().opEquals(target) || !scout.isMoving()) )
             {
                 executed = scout.move(target, false);
                 if (_debug_)
                     Console.Out.WriteLine("Overlord to Natural: " + executed);
-                System.Threading.Thread.Sleep(50);
             }
             return executed;
         }
@@ -195,7 +194,7 @@ namespace POSH_StarCraftBot.behaviours
 
             foreach (Unit unit in units)
             {
-                if (!unit.isCarryingGas() && !unit.isCarryingMinerals())
+                if (!unit.isCarryingGas() && !unit.isCarryingMinerals() && !unit.isConstructing())
                 {
                     scout = unit;
                     break;

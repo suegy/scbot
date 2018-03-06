@@ -24,7 +24,7 @@ namespace POSH_StarCraftBot.behaviours
         /// <summary>
         /// contains the current location and build queue 
         /// </summary>
-        Dictionary<int, Dictionary<Unit, TilePosition>> buildQueue;
+        Dictionary<int, List<TilePosition>> buildQueue;
 
         /// <summary>
         /// contains the buildings which are currently built and still in progress. Once a building is complete it 
@@ -37,7 +37,7 @@ namespace POSH_StarCraftBot.behaviours
             new string[] { },
             new string[] { })
         {
-            buildQueue = new Dictionary<int, Dictionary<Unit, TilePosition>>();
+            buildQueue = new Dictionary<int, List<TilePosition>>();
             buildingInProgress = new Dictionary<Unit, TilePosition>();
             destroyedBuildings = new Dictionary<int, Unit>();
         }
@@ -93,22 +93,33 @@ namespace POSH_StarCraftBot.behaviours
         protected int CountUnbuiltBuildings(UnitType type)
         {
             int count = 0;
-            if (!buildQueue.ContainsKey(type.getID()) || !(buildQueue[type.getID()] is Dictionary<Unit, TilePosition>))
+            if (!buildQueue.ContainsKey(type.getID()) || !(buildQueue[type.getID()] is List<TilePosition>))
                 return count;
             
-            Unit[] units = buildQueue[type.getID()].Keys.ToArray();
-            foreach (Unit unit in units)
+            for (int i = buildQueue[type.getID()].Count()-1; i > 0; i--)
             {
-                if (unit.isBeingConstructed() || (unit.isConstructing() && unit.getTargetPosition().opEquals(new Position(buildQueue[type.getID()][unit]))))
+                TilePosition pos = buildQueue[type.getID()].ElementAt(i);
+                IEnumerable<Unit> buildings = Interface().GetAllBuildings().Where(unit => unit.getType().getID() == type.getID() && unit.getTilePosition().getDistance(pos) < 10);
+                if (buildings.Count() < 1)
                 {
-                    buildingInProgress[unit] = unit.getTilePosition();
-                    count++;
+                    buildQueue[type.getID()].RemoveAt(i);
                 }
-                else if (unit.getHitPoints() == 0 || !unit.getTargetPosition().opEquals(new Position(buildQueue[type.getID()][unit])) || unit.isCompleted())
+                else
                 {
-                    buildQueue[type.getID()].Remove(unit);
-                }
-
+                    for (int j = buildings.Count()-1; j > 0; j-- )
+                    {
+                        Unit building = buildings.ElementAt(j);
+                        if (building.isBeingConstructed())
+                        {
+                            buildingInProgress[building] = building.getTilePosition();
+                            count++;
+                        }
+                        else if (building.getHitPoints() == 0 || building.isCompleted())
+                        {
+                            buildQueue[type.getID()].RemoveAt(j);
+                        }
+                    }
+                } 
             }
 
             return count;
@@ -116,9 +127,9 @@ namespace POSH_StarCraftBot.behaviours
 
         protected int CountBuildingsinProgress(UnitType type)
         {
-            Unit[] units = buildingInProgress.Keys.ToArray();
-                foreach (Unit unit in units)
+            for (int i = buildingInProgress.Keys.Count() - 1; i > 0; i--)
                 {
+                    Unit unit = buildingInProgress.Keys.ElementAt(i);
                     if (unit.getHitPoints() == 0 || unit.isCompleted())
                     {
                         buildingInProgress.Remove(unit);
@@ -132,24 +143,20 @@ namespace POSH_StarCraftBot.behaviours
         protected bool Build(UnitType type, int timeout = 10)
         {
             bool building = false;
-            if (buildLocation is TilePosition && CanMorphUnit(type) && builder is Unit && !builder.isConstructing() && !builder.isBeingConstructed())
+            if (buildLocation is TilePosition && CanMorphUnit(type) && builder is Unit && !builder.isConstructing())
             {
-                if (!buildQueue.ContainsKey(type.getID()) || !(buildQueue[type.getID()] is Dictionary<Unit, TilePosition>))
-                    buildQueue[type.getID()] = new Dictionary<Unit, TilePosition>();
+                if (!buildQueue.ContainsKey(type.getID()) || !(buildQueue[type.getID()] is List<TilePosition>))
+                    buildQueue[type.getID()] = new List<TilePosition>();
 
-                if (buildQueue[type.getID()].ContainsKey(builder) && builder.isConstructing())
+                if (buildQueue[type.getID()].Contains(buildLocation) && builder.getTilePosition().getDistance(buildLocation) < 10 && builder.isConstructing())
                     return true;
-                foreach (int uType in buildQueue.Keys)
-                    if (buildQueue[uType].ContainsKey(builder))
-                        return false;
-
-                while (!builder.isConstructing() && builder.getHitPoints() > 0 && timeout-- > 0)
+                
+                if (!builder.isConstructing() && builder.getHitPoints() > 0 )
                 {
                     building = builder.build(buildLocation, type);
-                    System.Threading.Thread.Sleep(50);
                 }
-                if (building)
-                    buildQueue[type.getID()][builder] = buildLocation;
+                if (building && !buildQueue[type.getID()].Contains(buildLocation))
+                    buildQueue[type.getID()].Add(buildLocation);
 
 
                 return building;
@@ -297,8 +304,8 @@ namespace POSH_StarCraftBot.behaviours
             {
                 move(new Position(buildPosition), builder);
 
-                // if (builder.getDistance(new Position(buildPosition)) < DELTADISTANCE )
-                return true;
+                if (builder.getDistance(new Position(buildPosition)) < DELTADISTANCE )
+                    return true;
             }
             return false;
         }

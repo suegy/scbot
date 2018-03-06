@@ -121,7 +121,7 @@ namespace POSH_StarCraftBot.behaviours
                     }
 
                 }
-                int secCounter = patchPositions.Count()+1;
+                int secCounter = 10;
                 while ( !(drone.getTarget() is Unit && drone.getTarget().getID() == finalPatch.getID()) && !drone.isMoving() && secCounter-- > 0)
                 {
                     executed = drone.gather(finalPatch, false);
