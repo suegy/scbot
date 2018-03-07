@@ -90,7 +90,7 @@ namespace POSH_StarCraftBot.behaviours
                 patch.Value.RemoveAll(drone => (drone.getHitPoints() <= 0 || drone.getOrderTarget() == null || ConvertTilePosition(drone.getOrderTarget().getTilePosition()) != patch.Key));
             }
 
-            foreach (Unit drone in drones)
+            foreach (Unit drone in drones.OrderBy(probe => probe.getResources()))
             {
                 if (maxUnits < 1)
                     break;

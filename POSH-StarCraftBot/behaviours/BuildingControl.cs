@@ -165,6 +165,42 @@ namespace POSH_StarCraftBot.behaviours
             return false;
         }
 
+        /**
+         * Based on Code from James for his Protoss Bot
+        */
+        protected bool Position(UnitType type, int X, int Y, int Z)
+        {
+            if (!Interface().baseLocations.ContainsKey((int)Interface().currentBuildSite) && Interface().currentBuildSite != BuildSite.NaturalChoke)
+                return false;
+
+            TilePosition buildPosition;
+            if (Interface().currentBuildSite == BuildSite.NaturalChoke)
+                buildPosition = Interface().chokeBuild;
+            else
+                buildPosition = Interface().baseLocations[(int)Interface().currentBuildSite];
+            builder = Interface().GetBuilder(buildPosition);
+
+            double dist = Z;
+            if (buildLocation is TilePosition && buildPosition is TilePosition)
+                dist = buildLocation.getDistance(buildPosition);
+            if (buildLocation != null && dist < Z && bwapi.Broodwar.canBuildHere(builder, buildLocation, type)) { }
+            else
+            {
+                Position pos = new Position(buildPosition);
+                Console.Out.WriteLine("Base:" + Interface().currentBuildSite + " loc:" + buildPosition.xConst() + ":" + buildPosition.yConst() + " pos" + pos.xConst() + ":" + pos.yConst());
+                buildPosition = PossibleBuildLocation(buildPosition, X, Y, Z, builder, type);
+                buildLocation = buildPosition;
+            }
+            if (buildLocation is TilePosition)
+            {
+                move(new Position(buildLocation), builder);
+                if (builder.getDistance(new Position(buildPosition)) < DELTADISTANCE)
+                    return true;
+            }
+            return false;
+        }
+
+
         //
         // ACTIONS
         //

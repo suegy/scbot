@@ -320,11 +320,24 @@ namespace POSH_StarCraftBot.behaviours
             //picking the right side of the choke to position forces
             Interface().forcePoints[ForceLocations.NaturalChoke] = (targetChoke.getDistance(new TilePosition(chokepoint.getSides().first)) < targetChoke.getDistance(new TilePosition(chokepoint.getSides().second))) ? new TilePosition(chokepoint.getSides().first) : new TilePosition(chokepoint.getSides().second);
             Interface().currentForcePoint = ForceLocations.NaturalChoke;
-
+            Interface().chokeBuild = Interface().forcePoints[ForceLocations.NaturalChoke];
             return true;
 
         }
 
+        [ExecutableAction("SelectChokeBuild")]
+        public bool SelectChokeBuild()
+        {
+            //TODO: add a way of choosing choke points to built things
+            if (Interface().chokeBuild is TilePosition)
+            {
+                //Interface().baseLocations[BuildSite.Choke] = Interface().buildingChoke;
+                Interface().currentBuildSite = BuildSite.NaturalChoke;
+                return true;
+            }
+            return false;
+            
+        }
         //
         // SENSES
         //

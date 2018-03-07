@@ -42,8 +42,9 @@ namespace POSH_StarCraftBot.behaviours
         protected internal bool move(Position target, Unit unit, int timeout = 10)
         {
             bool executed = false;
-            if (unit.getDistance(target) < DELTADISTANCE)
+            if (unit == null || unit.getDistance(target) < DELTADISTANCE)
                 return false;
+            
             while (!unit.getTargetPosition().opEquals(target) && timeout-- > 0)
             {
                 executed = unit.move(target, false);

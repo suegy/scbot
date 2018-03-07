@@ -11,7 +11,7 @@ using POSH_StarCraftBot.logic;
 
 namespace POSH_StarCraftBot
 {
-    public enum BuildSite { None = 0, StartingLocation = 1, Natural = 2, Extension = 3 };
+    public enum BuildSite { None = 0, StartingLocation = 1, Natural = 2, Extension = 3, NaturalChoke = 4 };
     public enum ForceLocations { NotAssigned = 0, OwnStart = 1, Natural = 2, Extension = 3, NaturalChoke = 4, EnemyNatural = 5, EnemyStart = 6, ArmyOne = 7, ArmyTwo = 8, Build = 9, Scout = 10 };
     public enum GamePhase { Early, Mid, End }
 
@@ -59,6 +59,7 @@ namespace POSH_StarCraftBot
         /// The base we want to build at. "O" means starting base, "1" is natural "2" is first Extension "-1" is error state.
         /// </summary>
         public BuildSite currentBuildSite;
+        public TilePosition chokeBuild;
 
         private int[] mineralPatchIDs = new int[3] { bwapi.UnitTypes_Resource_Mineral_Field.getID(), 
                 bwapi.UnitTypes_Resource_Mineral_Field_Type_2.getID(), 
