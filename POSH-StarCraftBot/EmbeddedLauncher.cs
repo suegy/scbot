@@ -54,21 +54,110 @@ namespace POSHLauncher
 #endif
             InitPOSH();
         }
-            
-            
+
+        private string[] getPlanFiles(string dir)
+        {
+            string planPath = dir;
+            string[] plans = { };
+            List<string> result = new List<string>();
+
+            try
+            {
+                if (File.Exists(planPath))
+                    plans = Directory.GetFiles(planPath, "*.lap", SearchOption.TopDirectoryOnly);
+                int end;
+                foreach (string plan in plans)
+                {
+                    end = plan.ToLower().Contains(".lap") ? plan.ToLower().LastIndexOf(".lap") : 0;
+                    result.Add(plan.Remove(end));
+                }
+            }
+            catch (IOException)
+            {
+                // TODO: @swen: some clever log or comment here!!!
+            }
+            return result.ToArray();
+        }
+
+        private string[] getPlans(string lib)
+        {
+            string planPath = control.getRootPath()+Path.DirectorySeparatorChar+lib;
+            string[] plans = { };
+            List<string> result = new List<string>();
+
+            try
+            {
+                if (File.Exists(planPath))
+                    plans = Directory.GetFiles(planPath, "*.lap", SearchOption.TopDirectoryOnly);
+                int end;
+                foreach (string plan in plans)
+                {
+                    end = plan.ToLower().Contains(".lap") ? plan.ToLower().LastIndexOf(".lap") : 0;
+                    result.Add(plan.Remove(end));
+                }
+            }
+            catch (IOException)
+            {
+                // TODO: @swen: some clever log or comment here!!!
+            }
+            return result.ToArray();
+        }
+
+        private string GetPlanFile(string lib, string plan)
+        {
+            string planPath = control.getRootPath() + Path.DirectorySeparatorChar + lib;
+            string[] plans = { };
+            string result = "";
+
+            try
+            {
+                if (Directory.Exists(planPath))
+                    plans = Directory.GetFiles(planPath, "*", SearchOption.AllDirectories);
+
+                foreach (string p in plans)
+                {
+                    if (p.Split(Path.DirectorySeparatorChar)
+                            .Last().Contains(plan))
+                    {
+                        result = p;
+                        break;
+                    }
+                }
+            }
+            catch (IOException)
+            { Console.Error.WriteLine("poshSHARP: could not find plan file at:" + planPath); }
+
+            string planResult = new StreamReader(File.OpenRead(result)).ReadToEnd();
+
+            return planResult;
+        }
 
             protected virtual void InitPOSH()
             {
+                //TODO: this needs to be clean up and is only a temp fix
 
             AssemblyControl.SetForUnityMode();
             control = AssemblyControl.GetControl() as EmbeddedControl;
             control.SetBehaviourConnector(this);
 
-            plans = CreatePOSHDict(actionPlans);
-            poshLink.SetActionPlans(plans);
 
-            initFiles = CreatePOSHDict(agentConfiguration);
-            poshLink.SetInitFiles(initFiles);
+
+
+            plans = new Dictionary<string, string>();
+            string[] planNames = getPlans("lib"+Path.DirectorySeparatorChar+"plans");
+            for (int i = 0; i < planNames.Length; i++)
+            {
+                string planResult = GetPlanFile("lib" + Path.DirectorySeparatorChar + "plans", planNames[i]);
+                if (planResult != null)
+                    plans.Add(planNames[i], planResult);
+            }
+            control.SetActionPlans(plans);
+
+            initFiles = new Dictionary<string,string>();
+            string initString = control.GetAgentInitFileString(POSHStarCraftBot.Properties.Settings.Default.initFile);
+            if (initString != null)
+                initFiles.Add(POSHStarCraftBot.Properties.Settings.Default.initFile.Split('-')[0], initString);
+            control.SetInitFiles(initFiles);
           
             engineLog = "init";
             

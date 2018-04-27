@@ -11,7 +11,7 @@ using SWIG.BWTA;
 using POSH.sys.annotations;
 using System.Threading;
 
-namespace POSH_StarCraftBot
+namespace POSHStarCraftBot
 {
     class Core : AStarCraftBehaviour
     {
