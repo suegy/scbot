@@ -397,7 +397,7 @@ namespace POSHStarCraftBot
         /// </param>
         public void ReleaseOldInfo(long history = 60000L)
         {
-            long leaseTime = EmbeddedCore.Timer.Time() - history;
+            long leaseTime = Core.Timer.Time() - history;
             if (leaseTime < 0L)
                 leaseTime = 0L;
 
@@ -452,42 +452,42 @@ namespace POSHStarCraftBot
 
         void IStarcraftBot.onUnitDiscover(SWIG.BWAPI.Unit unit)
         {
-            UnitDiscovered[EmbeddedCore.Timer.Time()] = unit;
+            UnitDiscovered[Core.Timer.Time()] = unit;
         }
 
         void IStarcraftBot.onUnitEvade(SWIG.BWAPI.Unit unit)
         {
-            UnitEvade[EmbeddedCore.Timer.Time()] = unit;
+            UnitEvade[Core.Timer.Time()] = unit;
         }
 
         void IStarcraftBot.onUnitShow(SWIG.BWAPI.Unit unit)
         {
-            UnitShow[EmbeddedCore.Timer.Time()] = unit;
+            UnitShow[Core.Timer.Time()] = unit;
         }
 
         void IStarcraftBot.onUnitHide(SWIG.BWAPI.Unit unit)
         {
-            UnitHide[EmbeddedCore.Timer.Time()] = unit;
+            UnitHide[Core.Timer.Time()] = unit;
         }
 
         void IStarcraftBot.onUnitCreate(SWIG.BWAPI.Unit unit)
         {
-            UnitCreated[EmbeddedCore.Timer.Time()] = unit;
+            UnitCreated[Core.Timer.Time()] = unit;
         }
 
         void IStarcraftBot.onUnitDestroy(SWIG.BWAPI.Unit unit)
         {
-            UnitDestroyed[EmbeddedCore.Timer.Time()] = unit;
+            UnitDestroyed[Core.Timer.Time()] = unit;
         }
 
         void IStarcraftBot.onUnitMorph(SWIG.BWAPI.Unit unit)
         {
-            UnitMorphed[EmbeddedCore.Timer.Time()] = unit;
+            UnitMorphed[Core.Timer.Time()] = unit;
         }
 
         void IStarcraftBot.onUnitRenegade(SWIG.BWAPI.Unit unit)
         {
-            UnitRenegade[EmbeddedCore.Timer.Time()] = unit;
+            UnitRenegade[Core.Timer.Time()] = unit;
         }
 
         void IStarcraftBot.onSaveGame(string gameName)

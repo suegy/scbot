@@ -485,7 +485,7 @@ namespace POSHStarCraftBot.behaviours
         [ExecutableSense("EnemyDetected")]
         public int EnemyDetected()
         {
-            IEnumerable<Unit> shownUnits = Interface().UnitShow.Where(pair => pair.Key < (EmbeddedCore.Timer.Time() - DELTATIME)).OrderByDescending(pair => pair.Key).Select(pair => pair.Value);
+            IEnumerable<Unit> shownUnits = Interface().UnitShow.Where(pair => pair.Key < (Core.Timer.Time() - DELTATIME)).OrderByDescending(pair => pair.Key).Select(pair => pair.Value);
             bool detectedNew = false;
 
             foreach (Unit unit in shownUnits)

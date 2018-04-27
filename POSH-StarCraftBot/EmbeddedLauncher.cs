@@ -25,7 +25,7 @@ namespace POSHLauncher
         internal bool loopsRunning = false;
         internal bool verbose;
         internal AgentBase[] agents = null;
-        internal EmbeddedCore core;
+        internal Core core;
 
         protected Dictionary<string, string> plans;
         protected Dictionary<string, string> initFiles;
@@ -243,8 +243,8 @@ namespace POSHLauncher
                 AStarCraftBehaviour poshBehaviour = poshConstructor.Invoke(new AgentBase[]{agent}) as AStarCraftBehaviour;
                 if (poshBehaviour != null)
                     result.Add(poshBehaviour);
-                if (poshBehaviour.GetType() == typeof(EmbeddedCore))
-                    core = poshBehaviour as EmbeddedCore;
+                if (poshBehaviour.GetType() == typeof(Core))
+                    core = poshBehaviour as Core;
             }
             return result.ToArray();
         }

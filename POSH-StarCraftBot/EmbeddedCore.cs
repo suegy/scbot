@@ -12,20 +12,20 @@ using System.Threading;
 
 namespace POSHStarCraftBot
 {
-    class EmbeddedCore : AStarCraftBehaviour
+    class Core : AStarCraftBehaviour
     {
         protected internal Dictionary<string, BWAPI.IStarcraftBot> clients = null;
         protected string botName;
         public static RealTimeTimer Timer { get; private set; }
         private Thread bwtaThread;
 
-        public EmbeddedCore(AgentBase agent)
+        public Core(AgentBase agent)
             : this(agent, null)
         {
 
         }
 
-        public EmbeddedCore(AgentBase agent, Dictionary<string, object> attributes)
+        public Core(AgentBase agent, Dictionary<string, object> attributes)
             : base(agent, new string[] { }, new string[] { })
         {
             // default connection values, use attributes to override
