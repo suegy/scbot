@@ -5,7 +5,7 @@ using System.Text;
 using POSH.sys;
 using SWIG.BWAPI;
 
-namespace POSH_StarCraftBot.behaviours
+namespace POSHStarCraftBot.behaviours
 {
     /// <summary>
     /// abstract class which is intended for inheritance of POSH Behaviour

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using SWIG.BWAPI;
 
-namespace POSH_StarCraftBot.logic
+namespace POSHStarCraftBot.logic
 {
     public class UnitCosts
     {

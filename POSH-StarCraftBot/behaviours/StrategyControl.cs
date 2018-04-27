@@ -7,9 +7,9 @@ using POSH.sys.annotations;
 using System.Threading;
 using SWIG.BWAPI;
 using SWIG.BWTA;
-using POSH_StarCraftBot.logic;
+using POSHStarCraftBot.logic;
 
-namespace POSH_StarCraftBot.behaviours
+namespace POSHStarCraftBot.behaviours
 {
 
     public enum Strategy { ThreeHatchHydra = 0, TwoHatchMuta = 1, Zergling = 2 }

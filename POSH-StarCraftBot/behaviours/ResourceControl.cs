@@ -7,7 +7,7 @@ using POSH.sys.annotations;
 using System.Threading;
 using SWIG.BWAPI;
 
-namespace POSH_StarCraftBot.behaviours
+namespace POSHStarCraftBot.behaviours
 {
     public class ResourceControl : AStarCraftBehaviour
     {

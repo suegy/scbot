@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using SWIG.BWAPI;
 
-namespace POSH_StarCraftBot.logic
+namespace POSHStarCraftBot.logic
 {
     /// <summary>
     /// Walk Tiles - each walk tile is an 8x8 square of pixels. These are called walk tiles because walkability data is available at this resolution.

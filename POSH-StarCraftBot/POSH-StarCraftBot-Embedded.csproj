@@ -8,7 +8,7 @@
     <ProjectGuid>{A4730B6A-6717-48D8-AEB2-810AE3A0315D}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>POSH_StarCraftBot</RootNamespace>
+    <RootNamespace>POSHStarCraftBot</RootNamespace>
     <AssemblyName>POSH-SCBot</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -78,7 +78,9 @@
     <Compile Include="behaviours\StrategyControl.cs" />
     <Compile Include="behaviours\UnitControl.cs" />
     <Compile Include="BODStarCraftBot.cs" />
-    <Compile Include="Core.cs" />
+    <Compile Include="EmbeddedCore.cs" />
+    <None Include="Core.cs" />
+    <Compile Include="EmbeddedLauncher.cs" />
     <Compile Include="logic\SCMath.cs" />
     <Compile Include="logic\TacticalAgent.cs" />
     <Compile Include="logic\UnitAgent.cs" />
@@ -86,6 +88,11 @@
     <Compile Include="logic\UnitCosts.cs" />
     <Compile Include="logic\WalkTile.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\bwapi-clr-embedded\bwapi-clr\bwapi-clr.csproj">
@@ -94,15 +101,19 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="library\init\POSH-StarCraftBot_init" />
+    <None Include="app.config" />
+    <None Include="library\init\POSHStarCraftBot_init" />
     <None Include="library\plans\PSCB-3HatchHydra-v2.lap" />
     <None Include="library\plans\PSCB-3HatchHydra.lap" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy /y  "$(ProjectDir)$(OutDir)POSH-SCBot.dll" "$(SolutionDir)..\..\$(ConfigurationName)\Libs\client"
-copy /y  "$(ProjectDir)$(OutDir)POSH-SCBot.dll" "$(ProjectDir)..\POSH-Launcher\library"
-copy /y  "$(ProjectDir)\library\plans\*.lap" "$(ProjectDir)..\POSH-Launcher\library\plans"</PostBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
     <PreBuildEvent>

@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using log4net;
 using SWIG.BWAPI;
-using POSH_StarCraftBot.behaviours;
+using POSHStarCraftBot.behaviours;
 
-namespace POSH_StarCraftBot.logic
+namespace POSHStarCraftBot.logic
 {
     /// <summary>
     /// This class is the UnitAgent class that contains all the information and methods that is nessesary for

@@ -6,9 +6,9 @@ using POSH.sys;
 using POSH.sys.annotations;
 using SWIG.BWAPI;
 using SWIG.BWTA;
-using POSH_StarCraftBot.logic;
+using POSHStarCraftBot.logic;
 
-namespace POSH_StarCraftBot.behaviours
+namespace POSHStarCraftBot.behaviours
 {
     public class BuildingControl : AStarCraftBehaviour
     {

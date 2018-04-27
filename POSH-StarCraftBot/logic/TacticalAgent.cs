@@ -5,7 +5,7 @@ using System.Text;
 using log4net;
 using SWIG.BWAPI;
 
-namespace POSH_StarCraftBot.logic
+namespace POSHStarCraftBot.logic
 {
     /// <summary>
     /// Tactical Assault Agent class...

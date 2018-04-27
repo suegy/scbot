@@ -7,7 +7,7 @@ using POSH.sys.annotations;
 using SWIG.BWAPI;
 using SWIG.BWTA;
 
-namespace POSH_StarCraftBot.behaviours
+namespace POSHStarCraftBot.behaviours
 {
     public class UnitControl : AStarCraftBehaviour
     {

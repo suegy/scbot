@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Xml.Serialization;
 
-namespace POSH_StarCraftBot.logic
+namespace POSHStarCraftBot.logic
 {
     /// <summary>
     /// UnitAgentOptimizedProperties class. Implements IComparable.
