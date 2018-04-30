@@ -53,6 +53,11 @@
 	SelectChoke 
 	MorphHydralisk
 ))
+(AP muta (minutes 1.0) (
+	SelectStartBase 
+	SelectChoke 
+	MorphMutalisk
+))
 (AP stdHydraArmy (minutes 1.0) (
 	SelectForceStartingLocation 
 	AssignArmyOne
@@ -178,7 +183,7 @@
 )
 (C setDefenceForce (minutes 1.0) (goal ((ArmyTwoReady)))
 	(elements
-		(	(DefenceCheck (trigger ((DefenderAttackerReadyRatio 1.0 <=) (CombatUnits 2 >=))) ReadyUnits)	)
+		(	(DefenceCheck (trigger ((DefenderAttackerReadyRatio 1.0 <=) (CombatUnits 8 >=))) ReadyUnits)	)
 		(	(CreateHydras (trigger ((CanCreateUnits) (HydraDenCount 1.0 >=))) DefenceHydras)	)
 		(	(CreateZerglings (trigger ((CanCreateUnits))) DefenceZerglings)	)
 	)

@@ -513,6 +513,35 @@ namespace POSHStarCraftBot.behaviours
             return (detectedNew) ? 1 : 0;
         }
 
+        [ExecutableSense("FindAttackLocations")]
+        public bool FindAttackLocations()
+        {
+
+        }
+
+        [ExecutableSense("UnderAttack")]
+        public bool UnderAttack()
+        {
+            IEnumerable<Unit> attackedUnits = Interface().GetAllUnits(true).Where(unit => unit.isUnderAttack());
+            if (attackedUnits.Count() > 0)
+                return true;
+
+            int randomMult = 3;
+
+            foreach (Unit enemy in bwapi.Broodwar.enemy().getUnits().Where(unit => unit.getPosition().getDistance(new Position(Interface().baseLocations[(int)BuildSite.StartingLocation])) <= randomMult * DELTADISTANCE))
+                Console.Out.WriteLine(++attackCounter + "enemy at:" + enemy.getTilePosition().xConst() + "" + enemy.getTilePosition().yConst());
+
+            if (Interface().baseLocations.ContainsKey((int)BuildSite.StartingLocation))
+            {
+                attackCounter += Interface().GetAllUnits(true).Where(unit => unit.isUnderAttack() && unit.getPosition().getDistance(new Position(Interface().baseLocations[(int)BuildSite.StartingLocation])) < randomMult * DELTADISTANCE).Count();
+            }
+            if (Interface().baseLocations.ContainsKey((int)BuildSite.Natural))
+            {
+                attackCounter += Interface().GetAllUnits(true).Where(unit => unit.isUnderAttack() && unit.getPosition().getDistance(new Position(Interface().baseLocations[(int)BuildSite.Natural])) < randomMult * DELTADISTANCE).Count();
+            }
+            return attackCounter > 0;
+        }
+
         [ExecutableSense("BaseUnderAttack")]
         public bool BaseUnderAttack()
         {
