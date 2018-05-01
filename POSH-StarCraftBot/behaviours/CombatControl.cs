@@ -7,6 +7,8 @@ using POSH.sys.annotations;
 using SWIG.BWAPI;
 using SWIG.BWTA;
 using POSHStarCraftBot.logic;
+using System.Collections;
+using POSH_StarCraftBot.logic;
 
 namespace POSHStarCraftBot.behaviours
 {
@@ -314,6 +316,15 @@ namespace POSHStarCraftBot.behaviours
             return AttackLocation(ForceLocations.NotAssigned);
         }
 
+        [ExecutableAction("Defend")]
+        public bool Defend()
+        {
+            this.attackLocations
+            return AttackLocation(ForceLocations.NotAssigned);
+        }
+
+
+
         [ExecutableAction("FendOffUnits")]
         public bool FendOffUnits()
         {
@@ -513,10 +524,60 @@ namespace POSHStarCraftBot.behaviours
             return (detectedNew) ? 1 : 0;
         }
 
-        [ExecutableSense("FindAttackLocations")]
-        public bool FindAttackLocations()
+        [ExecutableSense("EnemyCanHide")]
+        public bool EnemyCanHide() // returns true if we know the enemy and have spotted a unit that can hide or is hidden.
         {
+            bool canHide = false;
+            UnitPtrSet units = Interface().ActivePlayers.First().Value.getUnits();
+            if (units.Count < 1)
+                return canHide;
 
+
+
+
+
+            return canHide;
+        }
+        List<TilePosition> defendLocations = new List<TilePosition>();
+        List<Unit> attackingEnemyForces = new List<Unit>();
+
+
+        [ExecutableSense("AttackersChanged")]
+        public bool AttackersChanged()
+        {
+            bool change = false;
+            IEnumerable<Unit> attackedUnits = Interface().GetAllUnits(true).Where(unit => unit.isUnderAttack());
+            attackedUnits.Concat(Interface().GetAllBuildings().Where(unit => unit.isUnderAttack()));
+            UnitEqualityComparer comp = new UnitEqualityComparer();
+            Player enemy = attackedUnits.First().getLastAttackingPlayer();
+            List<Unit> attackers = new List<Unit>();
+            foreach (Unit enemyUnit in enemy.getUnits())
+            {
+                UnitType type = enemyUnit.getType();
+                UnitPtrSet possibleTagets = new UnitPtrSet();
+
+                if (!type.isWorker() && enemyUnit.getHitPoints() > 0)
+                {
+                    if (type.groundWeapon() != null)
+                        possibleTagets.Concat(enemyUnit.getUnitsInWeaponRange(type.groundWeapon()));
+                    if (type.airWeapon() != null)
+                        possibleTagets.Concat(enemyUnit.getUnitsInWeaponRange(type.airWeapon()));
+                    if (possibleTagets.Intersect(attackedUnits, comp).Count() > 0)
+                        attackers.Add(enemyUnit);
+                }
+            }
+
+            // updating enemies to check if they are still a thread
+            for (int i = attackingEnemyForces.Count - 1; i > 1; i--)
+                if (attackingEnemyForces[i].getHitPoints() < 0)
+                    attackingEnemyForces.RemoveAt(i);
+
+            // has there been a change in the enemies
+            if (attackingEnemyForces.Intersect(attackers, comp).Count() > 0)
+                change = true;
+            attackingEnemyForces = attackingEnemyForces.Union(attackers, comp) as List<Unit>;
+
+            return change;
         }
 
         [ExecutableSense("UnderAttack")]
@@ -525,21 +586,7 @@ namespace POSHStarCraftBot.behaviours
             IEnumerable<Unit> attackedUnits = Interface().GetAllUnits(true).Where(unit => unit.isUnderAttack());
             if (attackedUnits.Count() > 0)
                 return true;
-
-            int randomMult = 3;
-
-            foreach (Unit enemy in bwapi.Broodwar.enemy().getUnits().Where(unit => unit.getPosition().getDistance(new Position(Interface().baseLocations[(int)BuildSite.StartingLocation])) <= randomMult * DELTADISTANCE))
-                Console.Out.WriteLine(++attackCounter + "enemy at:" + enemy.getTilePosition().xConst() + "" + enemy.getTilePosition().yConst());
-
-            if (Interface().baseLocations.ContainsKey((int)BuildSite.StartingLocation))
-            {
-                attackCounter += Interface().GetAllUnits(true).Where(unit => unit.isUnderAttack() && unit.getPosition().getDistance(new Position(Interface().baseLocations[(int)BuildSite.StartingLocation])) < randomMult * DELTADISTANCE).Count();
-            }
-            if (Interface().baseLocations.ContainsKey((int)BuildSite.Natural))
-            {
-                attackCounter += Interface().GetAllUnits(true).Where(unit => unit.isUnderAttack() && unit.getPosition().getDistance(new Position(Interface().baseLocations[(int)BuildSite.Natural])) < randomMult * DELTADISTANCE).Count();
-            }
-            return attackCounter > 0;
+            return false;
         }
 
         [ExecutableSense("BaseUnderAttack")]
@@ -578,19 +625,10 @@ namespace POSHStarCraftBot.behaviours
             return 0;
         }
 
-        /// <summary>
-        /// Returns the Force which is currently fighting. There are currently only two forces. If zero is return no force is fighting.
-        /// </summary>
-        /// <returns></returns>
-        [ExecutableSense("ForceInFight")]
-        public int ForceInFight()
+        [ExecutableSense("NeedToBolsterForces")]
+        public bool NeedToBolsterForces()
         {
-            return 0;
-        }
 
-        [ExecutableSense("AttackPrepared")]
-        public bool AttackPrepared()
-        {
             return false;
         }
 

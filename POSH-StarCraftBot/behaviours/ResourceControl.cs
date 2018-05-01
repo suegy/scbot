@@ -99,6 +99,12 @@ namespace POSHStarCraftBot.behaviours
             return (Interface().baseLocations.ContainsKey((int)BuildSite.Natural) && Interface().baseLocations[(int)BuildSite.Natural] is TilePosition);
         }
 
+        [ExecutableSense("ExtensionFound")]
+        public bool ExtensionFound()
+        {
+            return (Interface().baseLocations.ContainsKey((int)BuildSite.Extension) && Interface().baseLocations[(int)BuildSite.Extension] is TilePosition);
+        }
+
         [ExecutableSense("HaveHydraSpeed")]
         public bool HaveHydraSpeed()
         {

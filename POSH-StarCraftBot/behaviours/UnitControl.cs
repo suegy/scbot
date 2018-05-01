@@ -98,7 +98,6 @@ namespace POSHStarCraftBot.behaviours
                 if (drone.getOrderTarget() is Unit && drone.getTarget() is Unit && resources.Contains(drone.getOrderTarget()) && drone.getTarget().getResources() > 0 &&
                     mined.ContainsKey(ConvertTilePosition(drone.getOrderTarget().getTilePosition())))
                 {
-                    Console.Out.WriteLine("test");
                     Console.Out.WriteLine("drone.getOrderTarget()" + drone.getOrderTarget().getID());
                     Console.Out.WriteLine("test" + drone.getTarget().getID());
                     continue;
@@ -125,7 +124,8 @@ namespace POSHStarCraftBot.behaviours
                 while ( !(drone.getTarget() is Unit && drone.getTarget().getID() == finalPatch.getID()) && !drone.isMoving() && secCounter-- > 0)
                 {
                     executed = drone.gather(finalPatch, false);
-                    maxUnits--;
+                    if (executed)
+                        maxUnits--;
                     System.Threading.Thread.Sleep(50);
                     // if (_debug_)
                     Console.Out.WriteLine("Drone is gathering: " + executed);

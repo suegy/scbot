@@ -62,7 +62,8 @@ namespace POSHStarCraftBot.behaviours
             return output;
         }
 
-        private TilePosition PossibleBuildLocation(TilePosition start, int xSpace, int ySpace, int iterations, Unit builder, UnitType building)
+        private TilePosition 
+            PossibleBuildLocation(TilePosition start, int xSpace, int ySpace, int iterations, Unit builder, UnitType building)
         {
             int x =   0;
             int y =   0;
