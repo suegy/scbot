@@ -84,19 +84,20 @@
     <Compile Include="logic\UnitAgent.cs" />
     <Compile Include="logic\UnitAgentOptimizedProperties.cs" />
     <Compile Include="logic\UnitCosts.cs" />
+    <Compile Include="logic\UnitEqualityComparer.cs" />
     <Compile Include="logic\WalkTile.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\bwapi-clr-embedded\bwapi-clr\bwapi-clr.csproj">
-      <Project>{8550F817-891A-41A1-B38B-227FA8B1D041}</Project>
-      <Name>bwapi-clr</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="library\init\POSH-StarCraftBot_init" />
     <None Include="library\plans\PSCB-3HatchHydra-v2.lap" />
     <None Include="library\plans\PSCB-3HatchHydra.lap" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\bwapi-clr-client\bwapi-clr\bwapi-clr.csproj">
+      <Project>{6657C37C-4F1B-4972-AAB0-B395EE5F53DF}</Project>
+      <Name>bwapi-clr</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

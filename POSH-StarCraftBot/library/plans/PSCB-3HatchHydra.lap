@@ -128,8 +128,8 @@
 )
 (C researchThreeHatch (seconds 1.0) (goal ((HaveHydraRange 1.0 ==) (HaveHydraSpeed 1.0 ==)))
 	(elements
-		(	(resHydraSpeed (trigger ((HaveHydraSpeed 1.0 !=) (HydraDenCount 0.0 >))) HydraSpeedUpgrade)	)
-		(	(resHydraRange (trigger ((HaveHydraRange 1.0 !=) (HydraDenCount 0.0 >))) HydraRangeUpgrade)	)
+		(	(resHydraSpeed (trigger ((HaveHydraSpeed 1.0 !=) )) HydraSpeedUpgrade)	)
+		(	(resHydraRange (trigger ((HaveHydraRange 1.0 !=) )) HydraRangeUpgrade)	)
 		(	(doneResearch (trigger ((HaveHydraRange 1.0 ==) (HaveHydraSpeed 1.0 ==))) FinishedResearch)	)
 	)
 )
@@ -175,7 +175,7 @@
 		(	(attackThreeHatch (trigger ((HydraliskCount 24.0 >=))) attackThreeHatchHydra)	)
 	)
 )
-(C defendLocation (seconds 1.0) (goal ((BaseUnderAttack 0.0 ==)))
+(C defend (seconds 1.0) (goal ((Success 0.0 ==)))
 	(elements
 		(	(SendArmy (trigger ((ArmyTwoReady))) sendDefendForce)	)
 		(	(ReadyArmyTwo (trigger ((CanCreateUnits) (ArmyTwoReady 1.0 !=))) setDefenceForce)	)
@@ -195,28 +195,28 @@
 		(strategize (trigger ((GameRunning 1.0 ==))) strategySelection(seconds 2.0)))
 		(
 
-		(retreat (trigger ((ForceIsLosing 1.0 =))) flee(seconds 1.0))		
+		(retreating (trigger ((ForceIsLosing 1.0 =))) flee(seconds 1.0))		
 
-		(attack (trigger ((CanAttack))) attackEnemy(seconds 0.5))		
+		(attacking (trigger ((CanAttack))) attackEnemy(seconds 0.5))		
 
-		(defend (trigger ((BaseUnderAttack 1.0 ==))) defendLocation(seconds 0.5)))
+		(defending (trigger ((UnderAttack 1.0 ==))) defend(seconds 0.5)))
 		(
 
-		(harvest (trigger ((DroneCount 1.0 >=) (IdleDrones))) droneHarvesting(seconds 0.5))		
+		(harvesting (trigger ((DroneCount 1.0 >=) (IdleDrones))) droneHarvesting(seconds 0.5))		
 
-		(repair (trigger ((BuildingDamaged 1.0 ==))) repairBuildings(seconds 0.5)))
+		(repairing (trigger ((BuildingDamaged 1.0 ==))) repairBuildings(seconds 0.5)))
 		(
 
-		(build (trigger ((NeedBuilding 1.0 ==))) buildBases(seconds 0.25))		
+		(building (trigger ((NeedBuilding 1.0 ==))) buildBases(seconds 0.25))		
 
-		(research (trigger ((Success))) research(seconds 0.5))		
+		(researching (trigger ((HydraDenCount 1.0 >=) (DoneResearching 1.0 <))) research(seconds 0.5))		
 
-		(createForce (trigger ((CanCreateUnits))) createUnits(seconds 0.25))		
+		(creatingForce (trigger ((CanCreateUnits))) createUnits(seconds 0.25))		
 
-		(explore (trigger ((DoneExploring 0.0 ==))) extendWorldKnowledge(seconds 0.25)))
+		(exploring (trigger ((DoneExploring 0.0 ==))) extendWorldKnowledge(seconds 0.25)))
 		(
 
-		(wait (trigger ((Success))) idle))
+		(waiting (trigger ((Success))) idle))
 
 	)
 )

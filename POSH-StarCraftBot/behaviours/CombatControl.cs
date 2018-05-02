@@ -10,6 +10,7 @@ using POSHStarCraftBot.logic;
 using System.Collections;
 using POSH_StarCraftBot.logic;
 
+
 namespace POSHStarCraftBot.behaviours
 {
     public class CombatControl : AStarCraftBehaviour
@@ -216,7 +217,7 @@ namespace POSHStarCraftBot.behaviours
                 return false;
             }
 
-            if (agent.MySquad[0].SCUnit.getPosition().getApproxDistance(new Position(Interface().baseLocations[(int)location])) < 5 * DELTADISTANCE 
+            if (agent.MySquad[0].SCUnit.getTilePosition().getDistance(Interface().baseLocations[(int)location]) < DELTADISTANCE 
                 || location == ForceLocations.NotAssigned || agent.MySquad[0].SCUnit.isUnderAttack()) //larger distance to not be over the base
                 agent.ExecuteBestActionForSquad();
             else
@@ -316,18 +317,10 @@ namespace POSHStarCraftBot.behaviours
             return AttackLocation(ForceLocations.NotAssigned);
         }
 
-        [ExecutableAction("Defend")]
-        public bool Defend()
-        {
-            this.attackLocations
-            return AttackLocation(ForceLocations.NotAssigned);
-        }
-
-
-
         [ExecutableAction("FendOffUnits")]
         public bool FendOffUnits()
         {
+
             return AttackLocation(this.armyTargets[ForceLocations.ArmyTwo]);
         }
 
@@ -523,17 +516,21 @@ namespace POSHStarCraftBot.behaviours
 
             return (detectedNew) ? 1 : 0;
         }
+        bool enemyHasStealth = false;
 
-        [ExecutableSense("EnemyCanHide")]
-        public bool EnemyCanHide() // returns true if we know the enemy and have spotted a unit that can hide or is hidden.
+        [ExecutableSense("EnemyHasStealth")]
+        public bool EnemyHasStealth() // returns true if we know the enemy and have spotted a unit that can hide or is hidden.
         {
-            bool canHide = false;
+            bool canHide = enemyHasStealth;
             UnitPtrSet units = Interface().ActivePlayers.First().Value.getUnits();
-            if (units.Count < 1)
+            if (enemyHasStealth || units.Count < 1)
                 return canHide;
-
-
-
+            foreach(Unit unit in units)
+                if (unit.getType().cloakingTech() != null) //TODO: check if that is actually checking for hidden units
+                {
+                    enemyHasStealth = true;
+                    canHide = true;
+                }
 
 
             return canHide;
