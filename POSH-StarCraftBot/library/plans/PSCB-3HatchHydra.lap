@@ -67,20 +67,19 @@
 	AttackEnemyMainBase 
 	FinishedForce
 ))
-(AP sendDefendForce (minutes 1.0) (
-	SelectAttackedBase 
-	SelectArmyTwo 
+(AP sendDefenceForce (minutes 1.0) (
+	SelectAttackedLocations 
 	FendOffUnits
 ))
-(AP DefenceHydras (minutes 1.0) (
+(AP defenceHydras (minutes 1.0) (
 	SelectDefenceBase 
 	MorphHydralisk
 ))
-(AP DefenceZerglings (minutes 1.0) (
+(AP defenceZerglings (minutes 1.0) (
 	SelectDefenceBase 
 	MorphZergling
 ))
-(AP ReadyUnits (minutes 1.0) (
+(AP readyUnits (minutes 1.0) (
 	AssignArmyTwo
 ))
 (C buildThreeHatchHydra (minutes 1.0) (goal ((HatcheryCount 3.0 >=) (ExtractorCount 1.0 >=) (HydraDenCount 1.0 >=) (LairCount 1.0 >=) (DroneCount 14.0 >=)))
@@ -177,15 +176,15 @@
 )
 (C defend (seconds 1.0) (goal ((Success 0.0 ==)))
 	(elements
-		(	(SendArmy (trigger ((ArmyTwoReady))) sendDefendForce)	)
-		(	(ReadyArmyTwo (trigger ((CanCreateUnits) (ArmyTwoReady 1.0 !=))) setDefenceForce)	)
+		(	(SendArmy (trigger ((IdleDefenders 1.0 >=))) sendDefenceForce)	)
+		(	(ReadyArmyTwo (trigger ((CanCreateUnits) (UnderAttack 1.0 !=))) setDefenceForce)	)
 	)
 )
-(C setDefenceForce (minutes 1.0) (goal ((ArmyTwoReady)))
+(C setDefenceForce (minutes 1.0) (goal ((Success 0.0 ==)))
 	(elements
-		(	(DefenceCheck (trigger ((DefenderAttackerReadyRatio 1.0 <=) (CombatUnits 8 >=))) ReadyUnits)	)
-		(	(CreateHydras (trigger ((CanCreateUnits) (HydraDenCount 1.0 >=))) DefenceHydras)	)
-		(	(CreateZerglings (trigger ((CanCreateUnits))) DefenceZerglings)	)
+		(	(DefenceCheck (trigger ((DefenderAttackerReadyRatio 1.0 <=))) readyUnits)	)
+		(	(CreateHydras (trigger ((CanCreateUnits) (HydraDenCount 1.0 >=))) defenceHydras)	)
+		(	(CreateZerglings (trigger ((CanCreateUnits))) defenceZerglings)	)
 	)
 )
 (SRDC ThreeHatchHydra (goal ((GameRunning 0.0 ==)))
@@ -209,7 +208,7 @@
 
 		(building (trigger ((NeedBuilding 1.0 ==))) buildBases(seconds 0.25))		
 
-		(researching (trigger ((HydraDenCount 1.0 >=) (DoneResearching 1.0 <))) research(seconds 0.5))		
+		(researching (trigger ((HydraDenCount 1.0 >=) (DoneResearch 1.0 <))) research(seconds 0.5))		
 
 		(creatingForce (trigger ((CanCreateUnits))) createUnits(seconds 0.25))		
 

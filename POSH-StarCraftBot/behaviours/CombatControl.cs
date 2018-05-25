@@ -9,6 +9,7 @@ using SWIG.BWTA;
 using POSHStarCraftBot.logic;
 using System.Collections;
 using POSH_StarCraftBot.logic;
+using System.Threading;
 
 
 namespace POSHStarCraftBot.behaviours
@@ -35,6 +36,10 @@ namespace POSHStarCraftBot.behaviours
 
         List<UnitAgent> selectedForce;
         Dictionary<ForceLocations, TacticalAgent> fights;
+
+        List<TilePosition> locationsToAttack = new List<TilePosition>();
+        List<Unit> attackingEnemyForces = new List<Unit>();
+
 
         private IEnumerable<BaseLocation> enemyStartLocations;
 
@@ -196,6 +201,67 @@ namespace POSHStarCraftBot.behaviours
                 Interface().forces[currentForce].RemoveAll(unit => unit.SCUnit.getHitPoints() <= 0);
         }
 
+        protected bool AttackPositions(ForceLocations army, List <TilePosition> locations)
+        {
+            bool executed = false;
+
+            foreach (TilePosition location in locations) {
+                List<UnitAgent> squad = (List<UnitAgent>) Interface().forces[army].OrderBy(unit => unit.SCUnit.getTilePosition().getDistance(location));
+                int units = Interface().forces[army].Count/locations.Count;
+                for (int i = 0; i < units; i++)
+                {
+                    Unit unit = Interface().forces[army][i].SCUnit;
+                    if (unit.getHitPoints() < 0 || unit.isAttacking())
+                        continue;
+                    int range = 1;
+                    if (unit.getType().airWeapon() != null && unit.getType().airWeapon().maxRange() > range)
+                        range  = unit.getType().airWeapon().maxRange();
+                    if (unit.getType().groundWeapon() != null && unit.getType().groundWeapon().maxRange() > range)
+                        range  = unit.getType().groundWeapon().maxRange();
+
+
+                    if (unit.getTilePosition().getDistance(location) < 3 * range)
+                    {
+
+                        List<Unit> enemies = null;
+                        if (unit.getType().airWeapon() != null)
+                            enemies = (List<Unit>)attackingEnemyForces.Where(enemy => enemy.getType().isFlyer());
+                        if (unit.getType().groundWeapon() != null && (enemies == null || enemies.Count < 1))
+                            enemies = (List<Unit>)attackingEnemyForces.Where(enemy => !enemy.getType().isFlyer());
+                        if (enemies == null || enemies.Count < 1)
+                            continue;
+                        enemies = (List<Unit>)enemies.OrderBy(enemy => enemy.getTilePosition().getDistance(location));
+
+                        int attack = 5;
+                        bool attacked = false;
+                        while (!attacked && attack-- > 0)
+                        {
+                            attacked = unit.attack(enemies.First());
+                            Thread.Sleep(10);
+                        }
+                        if (attacked)
+                            executed = true;
+                    }
+                    else
+                    {
+                        int attack = 5;
+                        bool attacked = false;
+                        while (!attacked && attack-- > 0)
+                        {
+                            attacked = unit.move(new Position(location),false);
+                            Thread.Sleep(10);
+                        }
+                        if (attacked)
+                            executed = true;
+                    }
+                }
+            }
+
+            return executed;
+            
+        }
+            
+
         protected bool AttackLocation(ForceLocations location)
         {
             TacticalAgent agent = null;
@@ -265,6 +331,56 @@ namespace POSHStarCraftBot.behaviours
             return true;
         }
 
+        [ExecutableAction("SelectAttackedLocations")]
+        public bool SelectAttackedLocations()
+        {
+            if (Interface().GetHatcheries().Count() < 1)
+                return false;
+            List<TilePosition> clusters = new List<TilePosition>();
+            int minDistance = Int16.MaxValue;
+            int maxDistance = 0;
+            int avgDistance = 0;
+            HashSet<HashSet<int>> forceMap = new HashSet<HashSet<int>>();
+
+            for (int i = 0; i < attackingEnemyForces.Count - 1; i++)
+                for (int j = i + 1; j < attackingEnemyForces.Count; j++)
+                    if (attackingEnemyForces[i].getID() == attackingEnemyForces[j].getID())
+                        continue;
+                    else
+                    {
+                        int dist = attackingEnemyForces[i].getDistance(attackingEnemyForces[j]);
+                        if (dist > maxDistance)
+                            maxDistance = dist;
+                        if (dist < minDistance)
+                            minDistance = dist;
+                        avgDistance += dist;
+                    }
+
+            avgDistance /= attackingEnemyForces.Count;
+            if (attackingEnemyForces.Count > 0)
+                
+                clusters[0] = attackingEnemyForces. First().getTilePosition();
+            for (int i = 0; i < attackingEnemyForces.Count - 1; i++)
+            {       
+                bool newPoint = true;
+                foreach (TilePosition clus in clusters)
+                {
+                    if (attackingEnemyForces[i].getTilePosition().getDistance(clus) < avgDistance)
+                    {
+                        newPoint = false;
+                        break;
+                    }
+                }
+                if (newPoint)
+                    clusters.Add(attackingEnemyForces[i].getTilePosition());
+
+            }
+
+            this.locationsToAttack = clusters;
+         
+            return locationsToAttack.Count > 0;
+        }
+
         [ExecutableAction("SelectAttackedBase")]
         public bool SelectAttackedBase()
         {
@@ -289,6 +405,7 @@ namespace POSHStarCraftBot.behaviours
 
             return true;
         }
+
         bool stopAttacks = false;
 
         [ExecutableAction("StopAttacks")]
@@ -320,8 +437,8 @@ namespace POSHStarCraftBot.behaviours
         [ExecutableAction("FendOffUnits")]
         public bool FendOffUnits()
         {
-
-            return AttackLocation(this.armyTargets[ForceLocations.ArmyTwo]);
+            return AttackPositions(ForceLocations.ArmyTwo, this.locationsToAttack);
+            //return AttackLocation(ForceLocations.ArmyTwo);
         }
 
         [ExecutableAction("SelectForceStartingLocation")]
@@ -535,9 +652,6 @@ namespace POSHStarCraftBot.behaviours
 
             return canHide;
         }
-        List<TilePosition> defendLocations = new List<TilePosition>();
-        List<Unit> attackingEnemyForces = new List<Unit>();
-
 
         [ExecutableSense("AttackersChanged")]
         public bool AttackersChanged()
@@ -667,8 +781,8 @@ namespace POSHStarCraftBot.behaviours
                 return true;
 
             return false;
-        }
-
+        } 
+        
         [ExecutableSense("ArmyTwoReady")]
         public bool ArmyTwoReady()
         {
@@ -676,6 +790,19 @@ namespace POSHStarCraftBot.behaviours
                 return true;
 
             return false;
+        }
+
+        [ExecutableSense("IdleDefenders")]
+        public int IdleDefenders()
+        {//TODO: redo if UnitAgent does not preform well
+            int idle = 0;
+            if (!Interface().forces.ContainsKey(ForceLocations.ArmyTwo) || Interface().forces[ForceLocations.ArmyTwo].Count < 1 )
+                return idle;
+
+            foreach (UnitAgent ag in Interface().forces[ForceLocations.ArmyTwo])
+                idle += (ag.GoalUnitToAttack == null) ? 1 : 0;
+            
+            return idle;
         }
 
 

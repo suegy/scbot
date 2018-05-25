@@ -349,7 +349,7 @@ namespace POSHStarCraftBot.behaviours
                 return false;
             switch (currentStrategy){
                 case Strategy.ThreeHatchHydra:
-                    return (Interface().GetHydraDens().Count() > 0) ? true : false;
+                    return (Interface().GetHydraDens().Count() > 0 || Interface().GetHatcheries().Count() > 0) ? true : false;
                 case Strategy.TwoHatchMuta:
                     return (Interface().GetLairs().Count() > 0 && Interface().GetSpire().Count() > 0) ? true : false;
                 case Strategy.Zergling:
